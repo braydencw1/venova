@@ -114,7 +114,7 @@ func handleVoiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate)
 	}
 
 	if m.VoiceState.UserID == morthisId {
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Hello gaylord <@%v>", morthisId))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
 	}
 
 	for _, griefee := range griefers {
