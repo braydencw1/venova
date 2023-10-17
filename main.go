@@ -37,9 +37,8 @@ func main() {
 	discord.AddHandler(onReady)
 	// Register the messageCreate functfunc messageCreate(s *discordgo.Session, m *discordgo.MessageCreate)ion as a callback for the MessageCreate event
 	// discord.AddMessageCreateHandler(messageCreate)
-	discord.AddHandler(messageCreate)
-	discord.AddHandler(addGriefer)
-	discord.AddHandler(userGriefer)
+	discord.AddHandler(handleMessageEvents)
+	discord.AddHandler(handleVoiceStateUpdate)
 	// Keep the bot running
 	log.Println("Bot is now running. Press Ctrl+C to exit.")
 	select {} // Block the main goroutine indefinitely
@@ -49,11 +48,16 @@ func onReady(s *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
 
-func addGriefer(s *discordgo.Session, m *discordgo.MessageCreate) {
+func handleMessageEvents(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
+	addGriefer(s, m)
+	handleCommands(s, m)
+}
+
+func addGriefer(s *discordgo.Session, m *discordgo.MessageCreate) {
 	parts := strings.Split(m.Content, " ")
 
 	if parts[0] == "!grief" {
@@ -84,12 +88,7 @@ func addGriefer(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore messages sent by the bot itself
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
+func handleCommands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID != s.State.User.ID {
 		log.Printf(m.Author.Username + ": " + m.Content)
 	}
@@ -109,7 +108,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func userGriefer(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
+func handleVoiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 	if m.ChannelID != channelId {
 		return
 	}
@@ -120,5 +119,3 @@ func userGriefer(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 		}
 	}
 }
-
-// 209404729225248769
