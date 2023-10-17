@@ -10,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var morthisId string = ""
+var morthisId string = "186317976033558528"
 var vetroId string = "1131832403581747381"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
@@ -111,6 +111,10 @@ func handleCommands(s *discordgo.Session, m *discordgo.MessageCreate) {
 func handleVoiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 	if m.ChannelID != channelId {
 		return
+	}
+
+	if m.VoiceState.UserID == morthisId {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Hello gaylord <@%v>", morthisId))
 	}
 
 	for _, griefee := range griefers {
