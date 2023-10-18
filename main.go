@@ -16,10 +16,8 @@ var morthisId string = "186317976033558528"
 var vetroId string = "1131832403581747381"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
-var now time.Time
 
 func main() {
-	now = time.Now()
 	// Load environment variables from the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file:", err)
@@ -139,7 +137,8 @@ func handleVoiceStateUpdate(sess *discordgo.Session, mess *discordgo.VoiceStateU
 
 func birthdateCheck(sess *discordgo.Session) { 
 	var birthDateDiscId int
-	currDate := fmt.Sprintf(time.Now().Format("2006-01-02"))
+	now := time.Now()
+	currDate := fmt.Sprintf(now.Format("2006-01-02"))
         targetTime := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, now.Location()) 
         if now.Hour() == targetTime.Hour() { 
 		birthDateDiscId = birthdateQuery(currDate)
