@@ -29,18 +29,14 @@ func OpenDatabase(dsn string) error {
 }
 
 type User struct {
-	ID         int `gorm:"primaryKey"`
-	Disc_id    int
-	First_name string
-	Last_name  string
-	Dob        time.Time
+	Id        int `gorm:"primaryKey"`
+	DiscordId int `gorm:"column:disc_id"`
+	FirstName string
+	LastName  string
+	Dob       time.Time
 }
 
 func GetBirthdays(dateToCheck time.Time) ([]int, error) {
-	if db == nil {
-		return nil, fmt.Errorf("database error")
-	}
-
 	var users []User
 
 	res := db.Where("EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
@@ -51,7 +47,7 @@ func GetBirthdays(dateToCheck time.Time) ([]int, error) {
 	var discIds []int
 	for _, user := range users {
 		log.Printf("Today's birthdays are: %v", user)
-		discIds = append(discIds, user.Disc_id)
+		discIds = append(discIds, user.DiscordId)
 	}
 	return discIds, nil
 }
