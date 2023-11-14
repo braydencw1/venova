@@ -3,14 +3,16 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 	"os"
 	"strings"
+	"time"
 	"venova/db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
-var tcTrainingId string = "1026643518942355476"
+
+// var tcTrainingId string = "1026643518942355476"
 var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
 var vetroId string = "1131832403581747381"
@@ -43,15 +45,15 @@ func main() {
 	discord.AddHandler(handleVoiceStateUpdate)
 	// Keep the bot running
 	log.Println("Bot is now running. Press Ctrl+C to exit.")
-	birthdateCheck(discord)
-	timer := time.NewTicker(24 * time.Hour)
-	go func() {
-		for range timer.C {
-			now = time.Now()
-			birthdateCheck(discord)
-		}
-
-	}()
+	dbUsername := os.Getenv("DB_USER")
+	dbHost := os.Getenv("DB_HOST")
+	dbDB := os.Getenv("DB_DB")
+	dbPassword := os.Getenv("DB_PASS")
+	dbPort := os.Getenv("DB_PORT")
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", dbUsername, dbPassword, dbHost, dbPort, dbDB)
+	db.OpenDatabase(dsn)
+	//	birthdateCheck(discord)
+	go birthdateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }
 
@@ -104,9 +106,7 @@ func handleCommands(sess *discordgo.Session, mess *discordgo.MessageCreate) {
 		log.Printf(mess.Author.Username + ": " + mess.Content)
 	}
 
-	// Respond to messages
 	if mess.Content == "!hello" {
-		// Reply with a message
 		sess.ChannelMessageSend(mess.ChannelID, "Hello, "+mess.Author.Username+"!")
 	}
 
@@ -135,48 +135,23 @@ func handleVoiceStateUpdate(sess *discordgo.Session, mess *discordgo.VoiceStateU
 	}
 }
 
-func birthdateCheck(sess *discordgo.Session) { 
-	var birthDateDiscId int
-	now := time.Now()
-	currDate := fmt.Sprintf(now.Format("2006-01-02"))
-        targetTime := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, now.Location()) 
-        if now.Hour() == targetTime.Hour() { 
-		birthDateDiscId = birthdateQuery(currDate)
-	}
-	birthDateDiscId = birthdateQuery(currDate)
-	if birthDateDiscId != -1 {
-		birthdayMessage := fmt.Sprintf("Happy Birthday: <@%d>", birthDateDiscId)
+func birthdateCheck(sess *discordgo.Session) {
+	currDate := time.Now()
 
-		_, err := sess.ChannelMessageSend(tcTrainingId, birthdayMessage)
-		if err != nil {
-			fmt.Println("Error:", err)
-		
-		}
-	
-	
+	birthDateDiscId, err := db.GetBirthdays(currDate)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	for _, value := range birthDateDiscId {
+		sess.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
 	}
 }
-
-
-func birthdateQuery(dateToCheck string) int {
-	var discIdReturn int
-	myQuery := fmt.Sprintf("SELECT * FROM users WHERE TO_CHAR(dob, 'YYYY-MM-DD') LIKE '%%%s%%';", dateToCheck)
-        _, rows, err := db.Dquery(myQuery) 
-        if err != nil { 
-                fmt.Println("Error:", err) 
-		return -1
-        }
-	defer rows.Close()
-	var firstname, lastname, initbday, ignored string
-	var discid int
-	for rows.Next() {
-		err := rows.Scan(&ignored, &discid, &firstname, &lastname, &initbday)
-		if err != nil {
-		fmt.Println("Error:", err)
-			return -1
-		}
-		discIdReturn = discid
- 
+func birthdateCheckRoutine(sess *discordgo.Session) {
+	birthdateCheck(sess)
+	timer := time.NewTicker(24 * time.Hour)
+	for range timer.C {
+		birthdateCheck(sess)
 	}
-	return discIdReturn
+
 }
