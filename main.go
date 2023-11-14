@@ -57,26 +57,26 @@ func main() {
 	select {} // Block the main goroutine indefinitely
 }
 
-func onReady(sess *discordgo.Session, event *discordgo.Ready) {
+func onReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
 
-func handleMessageEvents(sess *discordgo.Session, mess *discordgo.MessageCreate) {
-	if mess.Author.ID == sess.State.User.ID {
+func handleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg.Author.ID == discord.State.User.ID {
 		return
 	}
 
-	addGriefer(sess, mess)
-	handleCommands(sess, mess)
+	addGriefer(discord, msg)
+	handleCommands(discord, msg)
 }
 
-func addGriefer(sess *discordgo.Session, mess *discordgo.MessageCreate) {
-	parts := strings.Split(mess.Content, " ")
+func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	parts := strings.Split(msg.Content, " ")
 
 	if parts[0] == "!grief" {
-		if len(mess.Mentions) == 0 {
+		if len(msg.Mentions) == 0 {
 			if len(griefers) == 0 {
-				sess.ChannelMessageSend(mess.ChannelID, "Nobody is getting griefed!")
+				discord.ChannelMessageSend(msg.ChannelID, "Nobody is getting griefed!")
 
 				return
 			} else {
@@ -85,57 +85,57 @@ func addGriefer(sess *discordgo.Session, mess *discordgo.MessageCreate) {
 				for _, grief := range griefers {
 					myGriefees = append(myGriefees, fmt.Sprintf("<@%s>", grief))
 				}
-				sess.ChannelMessageSend(mess.ChannelID, strings.Join(myGriefees, " "))
+				discord.ChannelMessageSend(msg.ChannelID, strings.Join(myGriefees, " "))
 
 				return
 			}
 		}
 
-		for _, mention := range mess.Mentions {
+		for _, mention := range msg.Mentions {
 			griefers = append(griefers, mention.ID)
 		}
 
-		sess.ChannelMessageSend(mess.ChannelID, "This brotha is getting griefed")
+		discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
 
 		return
 	}
 }
 
-func handleCommands(sess *discordgo.Session, mess *discordgo.MessageCreate) {
-	if mess.Author.ID != sess.State.User.ID {
-		log.Printf(mess.Author.Username + ": " + mess.Content)
+func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg.Author.ID != discord.State.User.ID {
+		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	if mess.Content == "!hello" {
-		sess.ChannelMessageSend(mess.ChannelID, "Hello, "+mess.Author.Username+"!")
+	if msg.Content == "!hello" {
+		discord.ChannelMessageSend(msg.ChannelID, "Hello, "+msg.Author.Username+"!")
 	}
 
-	if mess.Content == fmt.Sprintf("<@%v>", vetroId) {
-		sess.ChannelMessageSend(mess.ChannelID, "Hey, "+mess.Author.Username+"!")
+	if msg.Content == fmt.Sprintf("<@%v>", vetroId) {
+		discord.ChannelMessageSend(msg.ChannelID, "Hey, "+msg.Author.Username+"!")
 
 	}
-	if mess.Content == "https://imgur.com/a/XQ3pPTQ" {
-		sess.ChannelMessageSend(mess.ChannelID, "Assemble!!!!!")
+	if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
+		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
 }
 
-func handleVoiceStateUpdate(sess *discordgo.Session, mess *discordgo.VoiceStateUpdate) {
-	if mess.ChannelID != channelId {
+func handleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStateUpdate) {
+	if msg.ChannelID != channelId {
 		return
 	}
 
-	if mess.VoiceState.UserID == morthisId {
-		sess.ChannelMessageSend(mess.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
+	if msg.VoiceState.UserID == morthisId {
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
 	}
 
 	for _, griefee := range griefers {
-		if mess.VoiceState.UserID == griefee {
-			sess.GuildMemberMove(mess.GuildID, griefee, &channelId)
+		if msg.VoiceState.UserID == griefee {
+			discord.GuildMemberMove(msg.GuildID, griefee, &channelId)
 		}
 	}
 }
 
-func birthdateCheck(sess *discordgo.Session) {
+func birthdateCheck(discord *discordgo.Session) {
 	currDate := time.Now()
 
 	birthDateDiscId, err := db.GetBirthdays(currDate)
@@ -144,14 +144,14 @@ func birthdateCheck(sess *discordgo.Session) {
 		return
 	}
 	for _, value := range birthDateDiscId {
-		sess.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
+		discord.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
 	}
 }
-func birthdateCheckRoutine(sess *discordgo.Session) {
-	birthdateCheck(sess)
+func birthdateCheckRoutine(discord *discordgo.Session) {
+	birthdateCheck(discord)
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {
-		birthdateCheck(sess)
+		birthdateCheck(discord)
 	}
 
 }
