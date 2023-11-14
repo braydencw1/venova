@@ -51,7 +51,10 @@ func main() {
 	dbPassword := os.Getenv("DB_PASS")
 	dbPort := os.Getenv("DB_PORT")
 	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", dbUsername, dbPassword, dbHost, dbPort, dbDB)
-	db.OpenDatabase(dsn)
+	err = db.OpenDatabase(dsn)
+	if err != nil {
+		log.Panicf("Database connection is rough, to say the least: %v", err)
+	}
 	//	birthdateCheck(discord)
 	go birthdateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
