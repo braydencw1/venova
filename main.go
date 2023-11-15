@@ -5,11 +5,14 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
+	"venova/db"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
+var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
 var vetroId string = "1131832403581747381"
 var channelId string = "209404729225248769"
@@ -41,29 +44,40 @@ func main() {
 	discord.AddHandler(handleVoiceStateUpdate)
 	// Keep the bot running
 	log.Println("Bot is now running. Press Ctrl+C to exit.")
+	dbUsername := os.Getenv("DB_USER")
+	dbHost := os.Getenv("DB_HOST")
+	dbDB := os.Getenv("DB_DB")
+	dbPassword := os.Getenv("DB_PASS")
+	dbPort := os.Getenv("DB_PORT")
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", dbUsername, dbPassword, dbHost, dbPort, dbDB)
+	err = db.OpenDatabase(dsn)
+	if err != nil {
+		log.Panicf("Database connection is rough, to say the least: %v", err)
+	}
+	go birthdateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }
 
-func onReady(s *discordgo.Session, event *discordgo.Ready) {
+func onReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
 
-func handleMessageEvents(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
+func handleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg.Author.ID == discord.State.User.ID {
 		return
 	}
 
-	addGriefer(s, m)
-	handleCommands(s, m)
+	addGriefer(discord, msg)
+	handleCommands(discord, msg)
 }
 
-func addGriefer(s *discordgo.Session, m *discordgo.MessageCreate) {
-	parts := strings.Split(m.Content, " ")
+func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	parts := strings.Split(msg.Content, " ")
 
 	if parts[0] == "!grief" {
-		if len(m.Mentions) == 0 {
+		if len(msg.Mentions) == 0 {
 			if len(griefers) == 0 {
-				s.ChannelMessageSend(m.ChannelID, "Nobody is getting griefed!")
+				discord.ChannelMessageSend(msg.ChannelID, "Nobody is getting griefed!")
 
 				return
 			} else {
@@ -72,54 +86,73 @@ func addGriefer(s *discordgo.Session, m *discordgo.MessageCreate) {
 				for _, grief := range griefers {
 					myGriefees = append(myGriefees, fmt.Sprintf("<@%s>", grief))
 				}
-				s.ChannelMessageSend(m.ChannelID, strings.Join(myGriefees, " "))
+				discord.ChannelMessageSend(msg.ChannelID, strings.Join(myGriefees, " "))
 
 				return
 			}
 		}
 
-		for _, mention := range m.Mentions {
+		for _, mention := range msg.Mentions {
 			griefers = append(griefers, mention.ID)
 		}
 
-		s.ChannelMessageSend(m.ChannelID, "This brotha is getting griefed")
+		discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
 
 		return
 	}
 }
 
-func handleCommands(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID != s.State.User.ID {
-		log.Printf(m.Author.Username + ": " + m.Content)
+func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg.Author.ID != discord.State.User.ID {
+		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	// Respond to messages
-	if m.Content == "!hello" {
-		// Reply with a message
-		s.ChannelMessageSend(m.ChannelID, "Hello, "+m.Author.Username+"!")
+	if msg.Content == "!hello" {
+		discord.ChannelMessageSend(msg.ChannelID, "Hello, "+msg.Author.Username+"!")
 	}
 
-	if m.Content == fmt.Sprintf("<@%v>", vetroId) {
-		s.ChannelMessageSend(m.ChannelID, "Hey, "+m.Author.Username+"!")
+	if msg.Content == fmt.Sprintf("<@%v>", vetroId) {
+		discord.ChannelMessageSend(msg.ChannelID, "Hey, "+msg.Author.Username+"!")
 
 	}
-	if m.Content == "https://imgur.com/a/XQ3pPTQ" {
-		s.ChannelMessageSend(m.ChannelID, "Assemble!!!!!")
+	if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
+		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
 }
 
-func handleVoiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
-	if m.ChannelID != channelId {
+func handleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStateUpdate) {
+	if msg.ChannelID != channelId {
 		return
 	}
 
-	if m.VoiceState.UserID == morthisId {
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
+	if msg.VoiceState.UserID == morthisId {
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
 	}
 
 	for _, griefee := range griefers {
-		if m.VoiceState.UserID == griefee {
-			s.GuildMemberMove(m.GuildID, griefee, &channelId)
+		if msg.VoiceState.UserID == griefee {
+			discord.GuildMemberMove(msg.GuildID, griefee, &channelId)
 		}
 	}
+}
+
+func birthdateCheck(discord *discordgo.Session) {
+	currDate := time.Now()
+
+	birthDateDiscId, err := db.GetBirthdays(currDate)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	for _, value := range birthDateDiscId {
+		discord.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
+	}
+}
+func birthdateCheckRoutine(discord *discordgo.Session) {
+	birthdateCheck(discord)
+	timer := time.NewTicker(24 * time.Hour)
+	for range timer.C {
+		birthdateCheck(discord)
+	}
+
 }
