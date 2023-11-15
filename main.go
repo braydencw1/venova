@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// var tcTrainingId string = "1026643518942355476"
 var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
 var vetroId string = "1131832403581747381"
@@ -55,7 +54,6 @@ func main() {
 	if err != nil {
 		log.Panicf("Database connection is rough, to say the least: %v", err)
 	}
-	//	birthdateCheck(discord)
 	go birthdateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }
