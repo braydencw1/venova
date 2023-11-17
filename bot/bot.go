@@ -1,15 +1,13 @@
-package main
+package bot
 
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 	"venova/db"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 )
 
 var tcGeneralId string = "209403061205073931"
@@ -18,60 +16,20 @@ var vetroId string = "1131832403581747381"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
 
-func main() {
-	// Load environment variables from the .env file
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
-	}
-	token := os.Getenv("TOKEN")
-
-	// Initialize Discord session
-	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		log.Fatal("Error creating Discord session:", err)
-	}
-	discord.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates
-
-	// Open a connection to Discord
-	if err := discord.Open(); err != nil {
-		log.Fatal("Error opening Discord connection:", err)
-	}
-	defer discord.Close()
-	discord.AddHandler(onReady)
-	// Register the messageCreate functfunc messageCreate(s *discordgo.Session, m *discordgo.MessageCreate)ion as a callback for the MessageCreate event
-	// discord.AddMessageCreateHandler(messageCreate)
-	discord.AddHandler(handleMessageEvents)
-	discord.AddHandler(handleVoiceStateUpdate)
-	// Keep the bot running
-	log.Println("Bot is now running. Press Ctrl+C to exit.")
-	dbUsername := os.Getenv("DB_USER")
-	dbHost := os.Getenv("DB_HOST")
-	dbDB := os.Getenv("DB_DB")
-	dbPassword := os.Getenv("DB_PASS")
-	dbPort := os.Getenv("DB_PORT")
-	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", dbUsername, dbPassword, dbHost, dbPort, dbDB)
-	err = db.OpenDatabase(dsn)
-	if err != nil {
-		log.Panicf("Database connection is rough, to say the least: %v", err)
-	}
-	go birthdateCheckRoutine(discord)
-	select {} // Block the main goroutine indefinitely
-}
-
-func onReady(discord *discordgo.Session, event *discordgo.Ready) {
+func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
 
-func handleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == discord.State.User.ID {
 		return
 	}
 
-	addGriefer(discord, msg)
-	handleCommands(discord, msg)
+	AddGriefer(discord, msg)
+	HandleCommands(discord, msg)
 }
 
-func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.Split(msg.Content, " ")
 
 	if parts[0] == "!grief" {
@@ -102,7 +60,7 @@ func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 }
 
-func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID != discord.State.User.ID {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
@@ -120,7 +78,7 @@ func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 }
 
-func handleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStateUpdate) {
+func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStateUpdate) {
 	if msg.ChannelID != channelId {
 		return
 	}
@@ -148,7 +106,7 @@ func birthdateCheck(discord *discordgo.Session) {
 		discord.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
 	}
 }
-func birthdateCheckRoutine(discord *discordgo.Session) {
+func BirthdateCheckRoutine(discord *discordgo.Session) {
 	birthdateCheck(discord)
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {
