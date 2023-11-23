@@ -12,9 +12,10 @@ import (
 
 var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
-var vetroId string = "1131832403581747381"
+var venovaId string = "1163950982259036302"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
+var nick string
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
@@ -57,24 +58,6 @@ func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
 
 		return
-	}
-}
-
-func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
-	if msg.Author.ID != discord.State.User.ID {
-		log.Printf(msg.Author.Username + ": " + msg.Content)
-	}
-
-	if msg.Content == "!hello" {
-		discord.ChannelMessageSend(msg.ChannelID, "Hello, "+msg.Author.Username+"!")
-	}
-
-	if msg.Content == fmt.Sprintf("<@%v>", vetroId) {
-		discord.ChannelMessageSend(msg.ChannelID, "Hey, "+msg.Author.Username+"!")
-
-	}
-	if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
-		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
 }
 

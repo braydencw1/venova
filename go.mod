@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -19,4 +20,6 @@ require (
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
+	gorm.io/datatypes v1.2.0 // indirect
+	gorm.io/driver/mysql v1.4.7 // indirect
 )
