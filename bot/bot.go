@@ -12,6 +12,7 @@ import (
 
 var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
+var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
@@ -87,6 +88,12 @@ func birthdateCheck(discord *discordgo.Session) {
 	}
 	for _, value := range birthDateDiscId {
 		discord.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
+		dmChannel, err := discord.UserChannelCreate(bettyId)
+		if err != nil {
+			log.Println("Error: ", err)
+			return
+		}
+		discord.ChannelMessageSend(dmChannel.ID, fmt.Sprintf("It's <@%d>'s birthday!", value))
 	}
 }
 func BirthdateCheckRoutine(discord *discordgo.Session) {
