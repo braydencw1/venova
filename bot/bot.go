@@ -14,6 +14,7 @@ var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
+var blueId string = "202213189482446851"
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
 var nick string
@@ -68,7 +69,7 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 	}
 
 	if msg.VoiceState.UserID == morthisId {
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello cutie <@%s>", morthisId))
 	}
 
 	for _, griefee := range griefers {

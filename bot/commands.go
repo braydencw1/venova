@@ -24,4 +24,8 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
 		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
+	if msg.Content == "!mc_restart" && (msg.Author.ID == morthisId || msg.Author.ID == blueId) {
+		discord.ChannelMessageSend(msg.ChannelID, "Restarting MWINECWAFT")
+		restartMinecraft()
+	}
 }
