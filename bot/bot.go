@@ -15,6 +15,8 @@ var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
+var adonId string = "131092144361308160"
+
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
 var nick string
