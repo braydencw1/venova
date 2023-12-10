@@ -23,8 +23,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	parts := strings.SplitN(msg.Content, " ", 1)
-
+	parts := strings.SplitN(msg.Content, " ", 2)
 	guild, err := discord.State.Guild(msg.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch message guild id (dm?): %v", err)
@@ -33,18 +32,18 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 	var member *discordgo.Member
 	for _, m := range guild.Members {
+		fmt.Println(m.User.ID)
 		if m.User.ID == msg.Author.ID {
 			member = m
 			break
 		}
 	}
-
 	if member == nil {
 		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
 		return
 	}
 
-	if memberHasRole(member, frostedRoleId) {
+	if memberHasRole(member, mcRoleId) {
 		if parts[0] == "!restart" {
 			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
 
@@ -61,6 +60,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			}
 			discord.ChannelMessageSend(msg.ChannelID, res)
 		} else if strings.HasPrefix(msg.Content, "!whitelist") {
+			log.Printf("WhitelistingQQQ, %s ", parts[1])
 			res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
 			if err != nil {
 				log.Printf("Err: %s", err)
