@@ -4,55 +4,68 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"venova/db"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
 
+func memberHasRole(member *discordgo.Member, roleId string) bool {
+	for _, memberRoleId := range member.Roles {
+		if memberRoleId == roleId {
+			return true
+		}
+	}
+	return false
+}
+
 func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
-	nick = msg.Author.Username
 	if msg.Author.ID != discord.State.User.ID {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	if msg.Content == "!hello" {
-		discord.ChannelMessageSend(msg.ChannelID, "Hello, "+msg.Author.Username+"!")
-	}
-	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
-		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", nick))
-	}
-	if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
-		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
-	}
-	if msg.Content == "!restart" && (msg.Author.ID == morthisId || msg.Author.ID == blueId || msg.Author.ID == adonId) {
-		discord.ChannelMessageSend(msg.ChannelID, "Restarting the Minecraft Server. Please allow 3 minutes or so for it to come back online.")
-		restartMinecraft()
-	}
-	if strings.HasPrefix(msg.Content, "!mc") && (msg.Author.ID == morthisId || msg.Author.ID == blueId || msg.Author.ID == adonId) {
-		log.Printf("Initial Minecraft Command, %s", msg.Content)
-		cmdWord := "!mc"
-		stripped := stripCommand(msg.Content, cmdWord)
-		log.Printf("Stripped Minecraft Command, %s", stripped)
-		res, err := minecraftCommand(stripped)
-		if err != nil {
-			log.Printf("Err: %s", err)
-		}
-		discord.ChannelMessageSend(msg.ChannelID, res)
+	parts := strings.SplitN(msg.Content, " ", 1)
 
+	guild, err := discord.State.Guild(msg.GuildID)
+	if err != nil {
+		log.Printf("Failed to fetch message guild id (dm?): %v", err)
+		return
 	}
-	if strings.HasPrefix(msg.Content, "!whitelist") {
-		cmdWord := "!whitelist"
-		stripped := stripCommand(msg.Content, cmdWord)
-		res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", stripped))
-		if err != nil {
-			log.Printf("Err: %s", err)
-		}
-		discord.ChannelMessageSend(msg.ChannelID, res)
 
+	var member *discordgo.Member
+	for _, m := range guild.Members {
+		if m.User.ID == msg.Author.ID {
+			member = m
+			break
+		}
 	}
-}
-func stripCommand(input string, cmdWord string) string {
-	stripped := strings.Replace(input, cmdWord, "", 1)
-	stripped = strings.TrimSpace(stripped)
-	return stripped
+
+	if member == nil {
+		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
+		return
+	}
+
+	if memberHasRole(member, frostedRoleId) {
+		if parts[0] == "!restart" {
+			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
+
+			go func() {
+				restartMinecraft()
+				time.Sleep(time.Second * 5)
+				_, err := discord.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, "Minecraft server restarted!")
+				log.Printf("err = %v", err)
+			}()
+		} else if parts[0] == "!mc" && (msg.Author.ID == blueId || msg.Author.ID == morthisId) {
+			res, err := minecraftCommand(parts[1])
+			if err != nil {
+				log.Printf("Err: %s", err)
+			}
+			discord.ChannelMessageSend(msg.ChannelID, res)
+		} else if strings.HasPrefix(msg.Content, "!whitelist") {
+			res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
+			if err != nil {
+				log.Printf("Err: %s", err)
+			}
+			discord.ChannelMessageSend(msg.ChannelID, res)
+		}
+	}
 }

@@ -3,6 +3,7 @@ package sshd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -27,6 +28,7 @@ func ConnectToDev() (*ssh.Client, error) {
 			ssh.PublicKeys(signer),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 10,
 	}
 	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", mcHost, mcPort), config)
 	if err != nil {

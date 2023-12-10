@@ -13,7 +13,10 @@ func restartMinecraft() {
 	client, err := sshd.ConnectToDev()
 	if err != nil {
 		log.Printf("SSH error: %v", err)
+		return
 	}
+	defer client.Close()
+
 	com, err := sshd.RunCommand(client, "docker-compose -f /app/docker-compose.yml restart")
 	if err != nil {
 		log.Println("Error:", err.Error())

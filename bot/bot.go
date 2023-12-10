@@ -17,9 +17,10 @@ var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 var adonId string = "131092144361308160"
 
+var frostedRoleId string = "618635064451923979"
+
 var channelId string = "209404729225248769"
 var griefers []string = []string{}
-var nick string
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
@@ -28,6 +29,12 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == discord.State.User.ID {
 		return
+	}
+
+	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
+		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
+	} else if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
+		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
 
 	AddGriefer(discord, msg)
