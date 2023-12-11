@@ -18,6 +18,17 @@ func memberHasRole(member *discordgo.Member, roleId string) bool {
 	return false
 }
 
+func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
+	var member *discordgo.Member
+	for _, m := range guild.Members {
+		if m.User.ID == userId {
+			member = m
+			break
+		}
+	}
+	return member
+}
+
 func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID != discord.State.User.ID {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
@@ -30,14 +41,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		return
 	}
 
-	var member *discordgo.Member
-	for _, m := range guild.Members {
-		fmt.Println(m.User.ID)
-		if m.User.ID == msg.Author.ID {
-			member = m
-			break
-		}
-	}
+	member := getGuildMember(guild, msg.Author.ID)
 	if member == nil {
 		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
 		return
@@ -50,8 +54,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			go func() {
 				restartMinecraft()
 				time.Sleep(time.Second * 5)
-				_, err := discord.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, "Minecraft server restarted!")
-				log.Printf("err = %v", err)
+				discord.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, "Minecraft server restarted!")
 			}()
 		} else if parts[0] == "!mc" && (msg.Author.ID == blueId || msg.Author.ID == morthisId) {
 			res, err := minecraftCommand(parts[1])

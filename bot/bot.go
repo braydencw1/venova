@@ -15,11 +15,10 @@ var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
-var mcRoleId string = "618635064451923979"
 
-//var mcRoleId string = "1183228947874459668"
+var mcRoleId string = "1183228947874459668"
 
-var channelId string = "209404729225248769"
+var channelId string = "209403061205073931"
 var griefers []string = []string{}
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
