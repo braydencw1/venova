@@ -23,19 +23,18 @@ func main() {
 	if err != nil {
 		log.Fatal("Error creating Discord session:", err)
 	}
-	discord.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates
+	discord.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates | discordgo.IntentGuildMembers | discordgo.IntentGuildPresences
 
 	// Open a connection to Discord
 	if err := discord.Open(); err != nil {
 		log.Fatal("Error opening Discord connection:", err)
 	}
 	defer discord.Close()
+
 	discord.AddHandler(bot.OnReady)
-	// Register the messageCreate functfunc messageCreate(s *discordgo.Session, m *discordgo.MessageCreate)ion as a callback for the MessageCreate event
-	// discord.AddMessageCreateHandler(messageCreate)
 	discord.AddHandler(bot.HandleMessageEvents)
 	discord.AddHandler(bot.HandleVoiceStateUpdate)
-	// Keep the bot running
+
 	log.Println("Bot is now running. Press Ctrl+C to exit.")
 	dbUsername := os.Getenv("DB_USER")
 	dbHost := os.Getenv("DB_HOST")

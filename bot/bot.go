@@ -14,9 +14,12 @@ var tcGeneralId string = "209403061205073931"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
-var channelId string = "209404729225248769"
+var blueId string = "202213189482446851"
+
+var mcRoleId string = "1183228947874459668"
+
+var channelId string = "209403061205073931"
 var griefers []string = []string{}
-var nick string
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
@@ -25,6 +28,12 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == discord.State.User.ID {
 		return
+	}
+
+	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
+		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
+	} else if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
+		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
 	}
 
 	AddGriefer(discord, msg)
@@ -68,7 +77,7 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 	}
 
 	if msg.VoiceState.UserID == morthisId {
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello gaylord <@%s>", morthisId))
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello cutie <@%s>", morthisId))
 	}
 
 	for _, griefee := range griefers {
