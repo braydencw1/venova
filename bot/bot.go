@@ -17,7 +17,7 @@ var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 
 var mcRoleId string = "1183228947874459668"
-
+var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
 var griefers []string = []string{}
 

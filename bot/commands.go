@@ -47,7 +47,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		return
 	}
 
-	if memberHasRole(member, mcRoleId) {
+	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {
 		if parts[0] == "!restart" {
 			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
 
