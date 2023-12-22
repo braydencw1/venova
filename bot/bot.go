@@ -11,11 +11,15 @@ import (
 )
 
 var tcGeneralId string = "209403061205073931"
+
+// var tcDndGeneralId string = "996838989132742756"
+var tcDndGeneralId string = "705245277149462597"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 
+var dndRoleId string = "705245276754935820"
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
@@ -88,9 +92,9 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 }
 
 func birthdateCheck(discord *discordgo.Session) {
-	currDate := time.Now()
+	nextDay := time.Now()
 
-	birthDateDiscId, err := db.GetBirthdays(currDate)
+	birthDateDiscId, err := db.GetBirthdays(nextDay)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return
@@ -112,4 +116,20 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 		birthdateCheck(discord)
 	}
 
+}
+
+func PlayDateCheckRoutine(discord *discordgo.Session) {
+	nextDay := time.Now().Add(24 * time.Hour)
+	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", dndRoleId)
+	res, _ := db.GetPlayDates(nextDay)
+	if res {
+		discord.ChannelMessageSend(tcDndGeneralId, msg)
+	}
+	timer := time.NewTicker(24 * time.Hour)
+	for range timer.C {
+		res, _ := db.GetPlayDates(nextDay)
+		if res {
+			discord.ChannelMessageSend(tcDndGeneralId, "")
+		}
+	}
 }

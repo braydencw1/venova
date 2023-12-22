@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"venova/db"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -46,7 +47,28 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
 		return
 	}
-
+	if parts[0] == "!play" && msg.Author.ID == morthisId {
+		layout := "01-02-2006"
+		t, err := time.Parse(layout, parts[1])
+		if err != nil {
+			fmt.Println("Error parsing date:", err)
+			return
+		}
+		insertRes, err := db.InsertPlayDate(t)
+		if err != nil {
+			log.Panic(err)
+		}
+		if insertRes {
+			discord.ChannelMessageSend(tcDndGeneralId, "The Date has been updated.")
+		}
+	}
+	if memberHasRole(member, dndRoleId) {
+		if parts[0] == "!when" {
+			res, _ := db.GetLatestPlayDate()
+			fmtPlayDate := fmt.Sprint(res.Format("01-02-2006"))
+			discord.ChannelMessageSend(tcDndGeneralId, fmtPlayDate)
+		}
+	}
 	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {
 		if parts[0] == "!restart" {
 			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
@@ -63,7 +85,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			}
 			discord.ChannelMessageSend(msg.ChannelID, res)
 		} else if strings.HasPrefix(msg.Content, "!whitelist") {
-			log.Printf("WhitelistingQQQ, %s ", parts[1])
+			log.Printf("Whitelisting, %s ", parts[1])
 			res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
 			if err != nil {
 				log.Printf("Err: %s", err)
