@@ -121,9 +121,14 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 func PlayDateCheckRoutine(discord *discordgo.Session) {
 	nextDay := time.Now().Add(24 * time.Hour)
 	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", dndRoleId)
-	res, _ := db.GetPlayDates(nextDay)
+	res, err := db.GetPlayDates(nextDay)
+	if err != nil {
+		log.Printf("Dnd play date input failed! %v", err)
+	}
 	if res {
 		discord.ChannelMessageSend(tcDndGeneralId, msg)
+	} else if !res {
+		log.Printf("Dnd play date input failed!")
 	}
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {

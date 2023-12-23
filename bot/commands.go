@@ -64,7 +64,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 	if memberHasRole(member, dndRoleId) {
 		if parts[0] == "!when" {
-			res, _ := db.GetLatestPlayDate()
+			res, err := db.GetLatestPlayDate()
+			if err != nil {
+				log.Printf("Retrieving last played date failed.")
+			}
 			fmtPlayDate := fmt.Sprint(res.Format("01-02-2006"))
 			discord.ChannelMessageSend(tcDndGeneralId, fmtPlayDate)
 		}

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -11,26 +11,23 @@ type DndPlayDate struct {
 
 func GetPlayDates(dateToCheck time.Time) (bool, error) {
 	var playdates DndPlayDate
-	var placeHolder bool
 	startOfDay := dateToCheck.Format("2006-01-02") + " 00:00:00"
 	endOfDay := dateToCheck.Format("2006-01-02") + " 23:59:59"
 	res := db.Where("date_of_play BETWEEN ? AND ?", startOfDay, endOfDay).Find(&playdates)
 	if res.Error != nil {
-		fmt.Println("Error: ", res.Error)
+		log.Printf("Error: %v", res.Error)
 		return false, res.Error
 	}
-	if res.RowsAffected == 0 {
-		placeHolder = false
-	} else if res.RowsAffected != 0 {
-		placeHolder = true
+	if res.RowsAffected == 1 {
+		return true, nil
+	} else {
+		return false, nil
 	}
-	return placeHolder, nil
 }
 
 func InsertPlayDate(playTime time.Time) (bool, error) {
 	formatted := playTime.Format("2006-01-02")
 	convertedTime, _ := time.Parse("2006-01-02", formatted)
-	tf := false
 	playDate := DndPlayDate{
 		DateOfPlay: convertedTime,
 	}
@@ -39,9 +36,10 @@ func InsertPlayDate(playTime time.Time) (bool, error) {
 		return false, res.Error
 	}
 	if res.RowsAffected == 1 {
-		tf = true
+		return true, nil
+	} else {
+		return false, nil
 	}
-	return tf, nil
 }
 func GetLatestPlayDate() (time.Time, error) {
 	var playDate DndPlayDate
