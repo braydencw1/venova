@@ -26,10 +26,8 @@ func GetPlayDates(dateToCheck time.Time) (bool, error) {
 }
 
 func InsertPlayDate(playTime time.Time) (bool, error) {
-	formatted := playTime.Format("2006-01-02")
-	convertedTime, _ := time.Parse("2006-01-02", formatted)
 	playDate := DndPlayDate{
-		DateOfPlay: convertedTime,
+		DateOfPlay: playTime,
 	}
 	res := db.Create(&playDate)
 	if res.Error != nil {
