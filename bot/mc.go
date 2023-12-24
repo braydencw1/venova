@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"venova/sshd"
+	"venova/sshcmd"
 
 	"github.com/gorcon/rcon"
 )
 
 func restartMinecraft() {
-	client, err := sshd.ConnectToDev()
+	client, err := sshcmd.ConnectToDev()
 	if err != nil {
 		log.Printf("SSH error: %v", err)
 		return
 	}
 	defer client.Close()
 
-	com, err := sshd.RunCommand(client, "docker-compose -f /app/docker-compose.yml restart")
+	com, err := sshcmd.RunCommand(client, "docker-compose -f /app/docker-compose.yml restart")
 	if err != nil {
 		log.Println("Error:", err.Error())
 	}

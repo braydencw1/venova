@@ -1,4 +1,4 @@
-package sshd
+package sshcmd
 
 import (
 	"fmt"
