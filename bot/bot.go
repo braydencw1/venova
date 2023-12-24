@@ -123,12 +123,10 @@ func PlayDateCheckRoutine(discord *discordgo.Session) {
 	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", dndRoleId)
 	res, err := db.GetPlayDates(nextDay)
 	if err != nil {
-		log.Printf("Dnd play date input failed! %v", err)
+		log.Printf("Retrieving dnd play date failed. %v", err)
 	}
 	if res {
 		discord.ChannelMessageSend(tcDndGeneralId, msg)
-	} else if !res {
-		log.Printf("Dnd play date input failed!")
 	}
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {
