@@ -19,6 +19,7 @@ var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 
+var bangersRoleId string = "1079585245575270480"
 var dndRoleId string = "705245276754935820"
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
@@ -36,8 +37,8 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
-	} else if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
-		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
+	} else if msg.Content == fmt.Sprintf("<@&%v>", bangersRoleId) && msg.Author.ID == morthisId {
+		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
 	AddGriefer(discord, msg)
