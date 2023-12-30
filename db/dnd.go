@@ -35,17 +35,29 @@ func GetPlayDates(dateToCheck time.Time) (bool, int64, int64, error) {
 	}
 }
 
-func InsertPlayDate(playTime time.Time) (bool, error) {
-	playDate := DndPlayDate{
-		DateOfPlay: playTime,
-	}
-	res := db.Create(&playDate)
+func InsertPlayDate(playTime time.Time, roleId int64) (bool, error) {
+	var playDateInfo DndPlayDate
+
+	res := db.Where("dnd_campaign_role_id = ?", roleId).Order("dnd_campaign_role_id DESC").Limit(1).Find(&playDateInfo)
+
 	if res.Error != nil {
 		return false, res.Error
 	}
+	insertPlayDate := DndPlayDate{
+		DateOfPlay:        playTime,
+		DndCampaignTcId:   playDateInfo.DndCampaignTcId,
+		DndCampaignId:     playDateInfo.DndCampaignId,
+		DndCampaignRoleId: roleId,
+	}
+	insertRes := db.Create(&insertPlayDate)
+	if insertRes.Error != nil {
+		return false, res.Error
+	}
+
 	if res.RowsAffected == 1 {
 		return true, nil
 	} else {
+
 		return false, nil
 	}
 }
