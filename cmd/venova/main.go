@@ -34,7 +34,6 @@ func main() {
 	discord.AddHandler(bot.OnReady)
 	discord.AddHandler(bot.HandleMessageEvents)
 	discord.AddHandler(bot.HandleVoiceStateUpdate)
-	discord.AddHandler(bot.HandleAFK)
 
 	log.Println("Bot is now running. Press Ctrl+C to exit.")
 	dbUsername := os.Getenv("DB_USER")
