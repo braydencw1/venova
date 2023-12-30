@@ -18,9 +18,11 @@ var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
-
 var bangersRoleId string = "1079585245575270480"
+
+var dndRoleIdH string = "1074405793291575306"
 var dndRoleId string = "705245276754935820"
+
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
@@ -121,19 +123,20 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 
 func PlayDateCheckRoutine(discord *discordgo.Session) {
 	nextDay := time.Now().Add(24 * time.Hour)
-	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", dndRoleId)
-	res, err := db.GetPlayDates(nextDay)
+	res, tcId, roleId, err := db.GetPlayDates(nextDay)
+	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", roleId)
 	if err != nil {
 		log.Printf("Retrieving dnd play date failed. %v", err)
 	}
 	if res {
-		discord.ChannelMessageSend(tcDndGeneralId, msg)
+		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
 	}
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {
-		res, _ := db.GetPlayDates(nextDay)
+		res, tcId, roleId, _ := db.GetPlayDates(nextDay)
+		msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
 		if res {
-			discord.ChannelMessageSend(tcDndGeneralId, "")
+			discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
 		}
 	}
 }
