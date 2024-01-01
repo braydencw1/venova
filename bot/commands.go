@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"venova/db"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -18,6 +19,20 @@ func memberHasRole(member *discordgo.Member, roleId string) bool {
 	return false
 }
 
+func getMemberDNDRole(member *discordgo.Member) string {
+	res, err := db.GetDndRoles()
+	if err != nil {
+		log.Printf("Could not retrieve role Ids from DB")
+	}
+	for _, memberRoleId := range member.Roles {
+		for _, arrayRoleId := range res {
+			if memberRoleId == arrayRoleId {
+				return memberRoleId
+			}
+		}
+	}
+	return ""
+}
 func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
 	var member *discordgo.Member
 	for _, m := range guild.Members {
@@ -47,6 +62,37 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		return
 	}
 
+	if parts[0] == "!play" && msg.Author.ID == morthisId {
+		layout := "01-02-2006"
+		t, err := time.Parse(layout, parts[1])
+		if err != nil {
+			fmt.Println("Error parsing date:", err)
+			return
+		}
+		currRoleId := getMemberDNDRole(member)
+		if currRoleId == "" {
+			log.Printf("Role not found.")
+		} else {
+			err := db.InsertPlayDate(t, currRoleId)
+			if err != nil {
+				log.Panic(err)
+			}
+			discord.ChannelMessageSend(msg.ChannelID, "The Date has been updated.")
+
+		}
+	}
+	if parts[0] == "!when" {
+		currRoleId := getMemberDNDRole(member)
+		if currRoleId == "" {
+			log.Printf("Could not find Dnd Role")
+		} else {
+			dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
+			if err != nil {
+				log.Printf("Error parsing Latest playDate, %v", err)
+			}
+			discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), fmt.Sprint(dateOfPlay.Format("01-02-2006")))
+		}
+	}
 	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {
 		if parts[0] == "!restart" {
 			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
@@ -63,7 +109,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			}
 			discord.ChannelMessageSend(msg.ChannelID, res)
 		} else if strings.HasPrefix(msg.Content, "!whitelist") {
-			log.Printf("WhitelistingQQQ, %s ", parts[1])
+			log.Printf("Whitelisting, %s ", parts[1])
 			res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
 			if err != nil {
 				log.Printf("Err: %s", err)

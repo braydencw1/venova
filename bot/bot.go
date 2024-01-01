@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -11,10 +12,17 @@ import (
 )
 
 var tcGeneralId string = "209403061205073931"
+
+// var tcDndGeneralId string = "996838989132742756"
+var tcDndGeneralId string = "705245277149462597"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
+var bangersRoleId string = "1079585245575270480"
+
+var dndRoleIdH string = "1074405793291575306"
+var dndRoleId string = "705245276754935820"
 
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
@@ -32,8 +40,8 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
-	} else if msg.Content == "https://imgur.com/a/XQ3pPTQ" {
-		discord.ChannelMessageSend(msg.ChannelID, "Assemble!!!!!")
+	} else if slices.Contains(msg.MentionRoles, bangersRoleId) {
+		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
 	AddGriefer(discord, msg)
@@ -88,9 +96,9 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 }
 
 func birthdateCheck(discord *discordgo.Session) {
-	currDate := time.Now()
+	nextDay := time.Now()
 
-	birthDateDiscId, err := db.GetBirthdays(currDate)
+	birthDateDiscId, err := db.GetBirthdays(nextDay)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return
@@ -112,4 +120,26 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 		birthdateCheck(discord)
 	}
 
+}
+
+func PlayDateCheckRoutine(discord *discordgo.Session) {
+	playDateCheck(discord)
+	timer := time.NewTicker(24 * time.Hour)
+	for range timer.C {
+		playDateCheck(discord)
+	}
+}
+
+func playDateCheck(discord *discordgo.Session) {
+	nextDay := time.Now().Add(24 * time.Hour)
+	res, tcId, roleId, err := db.GetPlayDates(nextDay)
+	if err != nil {
+		log.Printf("Failed to get play dates: %v", err)
+		return
+	}
+
+	msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
+	if res {
+		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
+	}
 }

@@ -47,5 +47,6 @@ func main() {
 		log.Panicf("Database connection is rough, to say the least: %v", err)
 	}
 	go bot.BirthdateCheckRoutine(discord)
+	go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }
