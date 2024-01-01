@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -39,7 +40,7 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
-	} else if msg.Content == fmt.Sprintf("<@&%v>", bangersRoleId) && msg.Author.ID == morthisId {
+	} else if slices.Contains(msg.MentionRoles, bangersRoleId) {
 		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
@@ -122,21 +123,23 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 }
 
 func PlayDateCheckRoutine(discord *discordgo.Session) {
-	nextDay := time.Now().Add(24 * time.Hour)
-	res, tcId, roleId, err := db.GetPlayDates(nextDay)
-	msg := fmt.Sprintf("Dnd is shceduled for tomorrow <@&%v>", roleId)
-	if err != nil {
-		log.Printf("Retrieving dnd play date failed. %v", err)
-	}
-	if res {
-		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
-	}
+	playDateCheck(discord)
 	timer := time.NewTicker(24 * time.Hour)
 	for range timer.C {
-		res, tcId, roleId, _ := db.GetPlayDates(nextDay)
-		msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
-		if res {
-			discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
-		}
+		playDateCheck(discord)
+	}
+}
+
+func playDateCheck(discord *discordgo.Session) {
+	nextDay := time.Now().Add(24 * time.Hour)
+	res, tcId, roleId, err := db.GetPlayDates(nextDay)
+	if err != nil {
+		log.Printf("Failed to get play dates: %v", err)
+		return
+	}
+
+	msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
+	if res {
+		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
 	}
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -9,40 +10,34 @@ type DndPlayDate struct {
 	DateOfPlay        time.Time
 	DndCampaignTcId   int64
 	DndCampaignId     int
-	DndCampaignRoleId int64
+	DndCampaignRoleId string
 }
 
 type DndCampaigns struct {
 	Id     int
 	Name   string
 	TcId   int64
-	RoleId int64
+	RoleId string
 }
 
-func GetPlayDates(dateToCheck time.Time) (bool, int64, int64, error) {
+func GetPlayDates(dateToCheck time.Time) (bool, int64, string, error) {
 	var playdates DndPlayDate
-	startOfDay := dateToCheck.Format("2006-01-02") + " 00:00:00"
-	endOfDay := dateToCheck.Format("2006-01-02") + " 23:59:59"
-	res := db.Where("date_of_play BETWEEN ? AND ?", startOfDay, endOfDay).Find(&playdates)
+	res := db.Where("DATE_TRUNC('day', date_of_play::date) = DATE_TRUNC('day', ?::date)", dateToCheck).Take(&playdates)
 	if res.Error != nil {
 		log.Printf("Error: %v", res.Error)
-		return false, 0, 0, res.Error
+		return false, 0, "", res.Error
 	}
-	if res.RowsAffected == 1 {
-		return true, playdates.DndCampaignTcId, playdates.DndCampaignRoleId, nil
-	} else {
-		return false, 0, 0, nil
-	}
+	return true, playdates.DndCampaignTcId, playdates.DndCampaignRoleId, nil
 }
 
-func InsertPlayDate(playTime time.Time, roleId int64) (bool, error) {
+func InsertPlayDate(playTime time.Time, roleId string) error {
 	var playDateInfo DndPlayDate
 
-	res := db.Where("dnd_campaign_role_id = ?", roleId).Order("dnd_campaign_role_id DESC").Limit(1).Find(&playDateInfo)
-
+	res := db.Where("dnd_campaign_role_id = ?", roleId).Take(&playDateInfo)
 	if res.Error != nil {
-		return false, res.Error
+		return res.Error
 	}
+
 	insertPlayDate := DndPlayDate{
 		DateOfPlay:        playTime,
 		DndCampaignTcId:   playDateInfo.DndCampaignTcId,
@@ -51,18 +46,12 @@ func InsertPlayDate(playTime time.Time, roleId int64) (bool, error) {
 	}
 	insertRes := db.Create(&insertPlayDate)
 	if insertRes.Error != nil {
-		return false, res.Error
+		return res.Error
 	}
-
-	if res.RowsAffected == 1 {
-		return true, nil
-	} else {
-
-		return false, nil
-	}
+	return nil
 }
 
-func GetLatestPlayDate(dndRoleId int64) (time.Time, int64, error) {
+func GetLatestPlayDate(dndRoleId string) (time.Time, int64, error) {
 	var playDate DndPlayDate
 	res := db.Where("dnd_campaign_role_id = ?", dndRoleId).Order("date_of_play desc").First(&playDate)
 	if res.Error != nil {
@@ -71,9 +60,9 @@ func GetLatestPlayDate(dndRoleId int64) (time.Time, int64, error) {
 	return playDate.DateOfPlay, playDate.DndCampaignTcId, nil
 }
 
-func GetDndRoles() ([]int64, error) {
+func GetDndRoles() ([]string, error) {
+	var roleArray []string
 	var dndRole []DndCampaigns
-	var roleArray []int64
 	res := db.Find(&dndRole)
 	if res.Error != nil {
 		return nil, res.Error
@@ -82,4 +71,20 @@ func GetDndRoles() ([]int64, error) {
 		roleArray = append(roleArray, campaign.RoleId)
 	}
 	return roleArray, nil
+}
+
+type DndResponses struct {
+	Id       int `gorm:"primaryKey"`
+	Response string
+}
+
+func DndMsgResponse() string {
+	var query DndResponses
+	res := db.Order("RANDOM()").Find(&query)
+	if res.Error != nil {
+		err := fmt.Sprintf("Error, %s", res.Error)
+		return err
+	}
+	return query.Response
+
 }

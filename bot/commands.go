@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 	"venova/db"
@@ -19,45 +18,20 @@ func memberHasRole(member *discordgo.Member, roleId string) bool {
 	}
 	return false
 }
-func dndRoleParse(roleArray []string) int64 {
-	var result int64
-	var success bool
 
-	if len(roleArray) > 0 {
-		for _, stringRole := range roleArray {
-			int64Role, err := strconv.ParseInt(stringRole, 10, 64)
-			if err == nil {
-				result = int64Role
-				success = true
-				break
-			} else {
-				log.Printf("Error converting role to int64, %v", err)
-			}
-		}
-	}
-
-	if !success {
-		log.Printf("Member is not a part of a DND Role.")
-	}
-
-	return result
-}
-
-func memberHasDndRole(member *discordgo.Member) []string {
-	var commonRole []string
+func getMemberDNDRole(member *discordgo.Member) string {
 	res, err := db.GetDndRoles()
 	if err != nil {
 		log.Printf("Could not retrieve role Ids from DB")
 	}
 	for _, memberRoleId := range member.Roles {
 		for _, arrayRoleId := range res {
-			if memberRoleId == fmt.Sprintf("%v", arrayRoleId) {
-				commonRole = append(commonRole, memberRoleId)
-				break
+			if memberRoleId == arrayRoleId {
+				return memberRoleId
 			}
 		}
 	}
-	return commonRole
+	return ""
 }
 func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
 	var member *discordgo.Member
@@ -95,28 +69,24 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			fmt.Println("Error parsing date:", err)
 			return
 		}
-		returnedDNDRoles := memberHasDndRole(member)
-		currRoleId := dndRoleParse(returnedDNDRoles)
-		if currRoleId == 0 {
+		currRoleId := getMemberDNDRole(member)
+		if currRoleId == "" {
 			log.Printf("Role not found.")
 		} else {
-			insertRes, err := db.InsertPlayDate(t, currRoleId)
+			err := db.InsertPlayDate(t, currRoleId)
 			if err != nil {
 				log.Panic(err)
 			}
-			if insertRes {
-				discord.ChannelMessageSend(msg.ChannelID, "The Date has been updated.")
-			}
+			discord.ChannelMessageSend(msg.ChannelID, "The Date has been updated.")
 
 		}
 	}
 	if parts[0] == "!when" {
-		commonRoles := memberHasDndRole(member)
-		parsed := dndRoleParse(commonRoles)
-		if parsed == 0 {
+		currRoleId := getMemberDNDRole(member)
+		if currRoleId == "" {
 			log.Printf("Could not find Dnd Role")
 		} else {
-			dateOfPlay, tcId, err := db.GetLatestPlayDate(parsed)
+			dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
 			if err != nil {
 				log.Printf("Error parsing Latest playDate, %v", err)
 			}
