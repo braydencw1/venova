@@ -143,3 +143,38 @@ func playDateCheck(discord *discordgo.Session) {
 		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
 	}
 }
+
+func createTimer(timeLength string) (time.Time, error) {
+	duration, err := time.ParseDuration(timeLength)
+	if err != nil {
+		fmt.Println("Error parsing time:", err)
+		return time.Time{}, err
+	}
+	timer := time.Now().Add(duration)
+	return timer, nil
+}
+
+func TimerExpiredCheck(timer time.Time) bool {
+	now := time.Now()
+	return now.After(timer)
+}
+
+func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, authorID string) {
+	ticker := time.NewTicker(1 * time.Minute) // Ticker to check every minute
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if TimerExpiredCheck(timer) {
+				dmChannel, err := discord.UserChannelCreate(authorID)
+				if err != nil {
+					log.Println("Error: ", err)
+					return
+				}
+				discord.ChannelMessageSend(dmChannel.ID, "Your timer is up!")
+				return
+			}
+		}
+	}
+}

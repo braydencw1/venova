@@ -49,7 +49,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	parts := strings.SplitN(msg.Content, " ", 2)
+	parts := strings.SplitN(msg.Content, " ", 3)
 	guild, err := discord.State.Guild(msg.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch message guild id (dm?): %v", err)
@@ -80,6 +80,22 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			discord.ChannelMessageSend(msg.ChannelID, "The Date has been updated.")
 
 		}
+	}
+	if parts[0] == "!set" && (msg.Author.ID == morthisId || msg.Author.ID == bettyId) {
+		log.Printf("Creating a timer for %s", msg.Author.Username)
+		log.Printf("%s", parts)
+		if len(parts) < 3 {
+			parts = append(parts, msg.Author.ID)
+		} else if len(parts) >= 3 {
+			result := strings.TrimPrefix(parts[2], "<@")
+			result = strings.TrimSuffix(result, ">")
+			parts[2] = result
+		}
+		timer, err := createTimer(parts[1])
+		if err != nil {
+			log.Printf("%s", err)
+		}
+		go TimerCheckerRoutine(discord, timer, parts[2])
 	}
 	if parts[0] == "!when" {
 		currRoleId := getMemberDNDRole(member)
