@@ -159,7 +159,7 @@ func TimerExpiredCheck(timer time.Time) bool {
 	return now.After(timer)
 }
 
-func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, authorID string) {
+func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, UserID string) {
 	ticker := time.NewTicker(1 * time.Minute) // Ticker to check every minute
 	defer ticker.Stop()
 
@@ -167,7 +167,7 @@ func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, authorID s
 		select {
 		case <-ticker.C:
 			if TimerExpiredCheck(timer) {
-				dmChannel, err := discord.UserChannelCreate(authorID)
+				dmChannel, err := discord.UserChannelCreate(UserID)
 				if err != nil {
 					log.Println("Error: ", err)
 					return
