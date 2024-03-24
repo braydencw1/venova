@@ -48,6 +48,14 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 	HandleCommands(discord, msg)
 }
 
+func GetUsernameFromID(session *discordgo.Session, userID string) (string, error) {
+	user, err := session.User(userID)
+	if err != nil {
+		return "", err
+	}
+	return user.Username, nil
+}
+
 func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.Split(msg.Content, " ")
 
@@ -154,27 +162,23 @@ func createTimer(timeLength string) (time.Time, error) {
 	return timer, nil
 }
 
-func TimerExpiredCheck(timer time.Time) bool {
-	now := time.Now()
-	return now.After(timer)
-}
-
-func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, UserID string) {
+func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, UserID string, errChan chan error) {
 	ticker := time.NewTicker(1 * time.Minute) // Ticker to check every minute
 	defer ticker.Stop()
-
+	defer close(errChan)
 	for {
-		select {
-		case <-ticker.C:
-			if TimerExpiredCheck(timer) {
-				dmChannel, err := discord.UserChannelCreate(UserID)
-				if err != nil {
-					log.Println("Error: ", err)
-					return
-				}
-				discord.ChannelMessageSend(dmChannel.ID, "Your timer is up!")
+		<-ticker.C
+		if time.Now().After(timer) {
+			dmChannel, err := discord.UserChannelCreate(UserID)
+			if err != nil {
+				errChan <- fmt.Errorf("error creating dm channel : %w", err)
 				return
 			}
+			_, err = discord.ChannelMessageSend(dmChannel.ID, "Your timer is up!")
+			if err != nil {
+				errChan <- fmt.Errorf("error sending dm for time : %w", err)
+			}
+			return
 		}
 	}
 }

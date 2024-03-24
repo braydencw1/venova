@@ -49,7 +49,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
 
-	parts := strings.SplitN(msg.Content, " ", 3)
+	parts := strings.SplitN(msg.Content, " ", 2)
 	guild, err := discord.State.Guild(msg.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch message guild id (dm?): %v", err)
@@ -82,20 +82,34 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		}
 	}
 	if parts[0] == "!set" && (msg.Author.ID == morthisId || msg.Author.ID == bettyId) {
+		extraParts := strings.SplitN(parts[1], " ", 2)
 		log.Printf("Creating a timer for %s", msg.Author.Username)
-		log.Printf("%s", parts)
-		if len(parts) < 3 {
-			parts = append(parts, msg.Author.ID)
-		} else if len(parts) >= 3 {
-			result := strings.TrimPrefix(parts[2], "<@")
+		if len(extraParts) == 1 {
+			extraParts = append(extraParts, msg.Author.ID)
+		} else if len(extraParts) == 2 {
+			result := strings.TrimPrefix(extraParts[1], "<@")
 			result = strings.TrimSuffix(result, ">")
-			parts[2] = result
+			extraParts[1] = result
 		}
-		timer, err := createTimer(parts[1])
+
+		timer, err := createTimer(extraParts[0])
+		if err != nil {
+			log.Printf("Could not create timer %w", err)
+		}
+		timerDestUserName, err := GetUsernameFromID(discord, extraParts[1])
+		if err != nil {
+			log.Printf("Could not retriever UserName from userID, %s", err)
+		}
+		log.Printf("Creating a timer for %s, for the length %s, destined for %s with userID %s", msg.Author.Username, extraParts[0], timerDestUserName, extraParts[1])
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		go TimerCheckerRoutine(discord, timer, parts[2])
+		errChan := make(chan error)
+		go TimerCheckerRoutine(discord, timer, extraParts[1], errChan)
+		err = <-errChan
+		if err != nil {
+			log.Printf("Error with the timer routine, %v", err)
+		}
 	}
 	if parts[0] == "!when" {
 		currRoleId := getMemberDNDRole(member)
