@@ -94,7 +94,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 		timer, err := createTimer(extraParts[0])
 		if err != nil {
-			log.Printf("Could not create timer %w", err)
+			log.Printf("Could not create timer %s", err)
 		}
 		timerDestUserName, err := GetUsernameFromID(discord, extraParts[1])
 		if err != nil {

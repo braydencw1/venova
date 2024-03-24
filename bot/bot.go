@@ -13,16 +13,11 @@ import (
 
 var tcGeneralId string = "209403061205073931"
 
-// var tcDndGeneralId string = "996838989132742756"
-var tcDndGeneralId string = "705245277149462597"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 var bangersRoleId string = "1079585245575270480"
-
-var dndRoleIdH string = "1074405793291575306"
-var dndRoleId string = "705245276754935820"
 
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
