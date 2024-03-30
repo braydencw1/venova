@@ -13,16 +13,11 @@ import (
 
 var tcGeneralId string = "209403061205073931"
 
-// var tcDndGeneralId string = "996838989132742756"
-var tcDndGeneralId string = "705245277149462597"
 var morthisId string = "186317976033558528"
 var bettyId string = "641009995634180096"
 var venovaId string = "1163950982259036302"
 var blueId string = "202213189482446851"
 var bangersRoleId string = "1079585245575270480"
-
-var dndRoleIdH string = "1074405793291575306"
-var dndRoleId string = "705245276754935820"
 
 var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
@@ -46,6 +41,14 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	AddGriefer(discord, msg)
 	HandleCommands(discord, msg)
+}
+
+func GetUsernameFromID(session *discordgo.Session, userID string) (string, error) {
+	user, err := session.User(userID)
+	if err != nil {
+		return "", err
+	}
+	return user.Username, nil
 }
 
 func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -141,5 +144,36 @@ func playDateCheck(discord *discordgo.Session) {
 	msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
 	if res {
 		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
+	}
+}
+
+func createTimer(timeLength string) (time.Time, error) {
+	duration, err := time.ParseDuration(timeLength)
+	if err != nil {
+		fmt.Println("Error parsing time:", err)
+		return time.Time{}, err
+	}
+	timer := time.Now().Add(duration)
+	return timer, nil
+}
+
+func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, UserID string, errChan chan error) {
+	ticker := time.NewTicker(1 * time.Minute) // Ticker to check every minute
+	defer ticker.Stop()
+	defer close(errChan)
+	for {
+		<-ticker.C
+		if time.Now().After(timer) {
+			dmChannel, err := discord.UserChannelCreate(UserID)
+			if err != nil {
+				errChan <- fmt.Errorf("error creating dm channel : %w", err)
+				return
+			}
+			_, err = discord.ChannelMessageSend(dmChannel.ID, "Your timer is up!")
+			if err != nil {
+				errChan <- fmt.Errorf("error sending dm for time : %w", err)
+			}
+			return
+		}
 	}
 }
