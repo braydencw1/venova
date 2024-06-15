@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -18,7 +19,7 @@ func GetBirthdays(dateToCheck time.Time) ([]int, error) {
 
 	res := db.Where("EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
 	if res.Error != nil {
-		//fmt.Println("Error: ", res.Error)
+		fmt.Println("Error: ", res.Error)
 		return nil, res.Error
 	}
 	var discIds []int
