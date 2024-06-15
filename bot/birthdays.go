@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"time"
 	"venova/db"
 
@@ -14,6 +15,7 @@ func birthdateCheck(discord *discordgo.Session) {
 	birthDateDiscId, err := db.GetBirthdays(nextDay)
 	if err != nil {
 		fmt.Println("Error: ", err)
+		log.Printf("HEREEE")
 		return
 	}
 	for _, value := range birthDateDiscId {
@@ -22,11 +24,17 @@ func birthdateCheck(discord *discordgo.Session) {
 
 	}
 }
+
 func BirthdateCheckRoutine(discord *discordgo.Session) {
-	birthdateCheck(discord)
-	timer := time.NewTicker(24 * time.Hour)
-	for range timer.C {
+	for {
+		now := time.Now()
+		next := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, now.Location())
+		if now.After(next) {
+			next = next.Add(24 * time.Hour)
+		}
+		durTilNextCheck := next.Sub(now)
+		timer := time.NewTimer(durTilNextCheck)
+		<-timer.C
 		birthdateCheck(discord)
 	}
-
 }
