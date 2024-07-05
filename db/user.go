@@ -23,11 +23,11 @@ func GetBirthdays(dateToCheck time.Time) (map[int]string, error) {
 		fmt.Println("Error: ", res.Error)
 		return nil, res.Error
 	}
-	discio := make(map[int]string)
+	bdayMap := make(map[int]string)
 
 	for _, user := range users {
 		log.Printf("Today's birthdays are: %v", user)
-		discio[user.DiscordId] = user.BdayResponse
+		bdayMap[user.DiscordId] = user.BdayResponse
 	}
-	return discio, nil
+	return bdayMap, nil
 }
