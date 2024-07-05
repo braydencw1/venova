@@ -14,13 +14,18 @@ func birthdateCheck(discord *discordgo.Session) {
 
 	birthDateDiscId, err := db.GetBirthdays(nextDay)
 	if err != nil {
-		fmt.Println("Error: ", err)
-		log.Printf("HEREEE")
+		log.Printf("error fetching birthdates :%s", err)
 		return
 	}
-	for _, value := range birthDateDiscId {
-		sendChannelMsg(discord, tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
-		dmUser(discord, bettyId, fmt.Sprintf("It's <@%d>'s birthday!", value))
+	for discID, bdres := range birthDateDiscId {
+		log.Printf("Here is %d, %s", discID, bdres)
+		if bdres == "" {
+			sendChannelMsg(discord, tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", discID))
+		} else {
+			sendChannelMsg(discord, tcGeneralId, fmt.Sprintf("%s <@%d>", bdres, discID))
+		}
+
+		dmUser(discord, bettyId, fmt.Sprintf("It's <@%d>'s birthday!", discID))
 
 	}
 }
