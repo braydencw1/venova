@@ -98,33 +98,6 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 	}
 }
 
-func birthdateCheck(discord *discordgo.Session) {
-	nextDay := time.Now()
-
-	birthDateDiscId, err := db.GetBirthdays(nextDay)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return
-	}
-	for _, value := range birthDateDiscId {
-		discord.ChannelMessageSend(tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", value))
-		dmChannel, err := discord.UserChannelCreate(bettyId)
-		if err != nil {
-			log.Println("Error: ", err)
-			return
-		}
-		discord.ChannelMessageSend(dmChannel.ID, fmt.Sprintf("It's <@%d>'s birthday!", value))
-	}
-}
-func BirthdateCheckRoutine(discord *discordgo.Session) {
-	birthdateCheck(discord)
-	timer := time.NewTicker(24 * time.Hour)
-	for range timer.C {
-		birthdateCheck(discord)
-	}
-
-}
-
 func PlayDateCheckRoutine(discord *discordgo.Session) {
 	playDateCheck(discord)
 	timer := time.NewTicker(24 * time.Hour)

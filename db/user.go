@@ -7,14 +7,15 @@ import (
 )
 
 type User struct {
-	Id        int `gorm:"primaryKey"`
-	DiscordId int `gorm:"column:disc_id"`
-	FirstName string
-	LastName  string
-	Dob       time.Time
+	Id           int `gorm:"primaryKey"`
+	DiscordId    int `gorm:"column:disc_id"`
+	FirstName    string
+	LastName     string
+	Dob          time.Time
+	BdayResponse string
 }
 
-func GetBirthdays(dateToCheck time.Time) ([]int, error) {
+func GetBirthdays(dateToCheck time.Time) (map[int]string, error) {
 	var users []User
 
 	res := db.Where("EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
@@ -22,10 +23,11 @@ func GetBirthdays(dateToCheck time.Time) ([]int, error) {
 		fmt.Println("Error: ", res.Error)
 		return nil, res.Error
 	}
-	var discIds []int
+	bdayMap := make(map[int]string)
+
 	for _, user := range users {
 		log.Printf("Today's birthdays are: %v", user)
-		discIds = append(discIds, user.DiscordId)
+		bdayMap[user.DiscordId] = user.BdayResponse
 	}
-	return discIds, nil
+	return bdayMap, nil
 }
