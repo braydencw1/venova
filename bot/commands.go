@@ -112,17 +112,24 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		}
 	}
 	if parts[0] == "!when" {
+		now := time.Now()
 		currRoleId := getMemberDNDRole(member)
 		if currRoleId == "" {
 			log.Printf("Could not find Dnd Role")
+		}
+		dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
+		if err != nil {
+			log.Printf("Error parsing Latest playDate, %v", err)
+		}
+		fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
+		s := fmt.Sprintf("%v", tcId)
+		if dateOfPlay.Before(now) {
+			discord.ChannelMessageSend(s, fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
 		} else {
-			dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
-			if err != nil {
-				log.Printf("Error parsing Latest playDate, %v", err)
-			}
-			discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), fmt.Sprint(dateOfPlay.Format("01-02-2006")))
+			discord.ChannelMessageSend(s, fmtDate)
 		}
 	}
+
 	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {
 		if parts[0] == "!restart" {
 			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
