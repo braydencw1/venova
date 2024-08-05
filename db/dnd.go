@@ -2,8 +2,9 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type DndPlayDate struct {
@@ -24,7 +25,9 @@ func GetPlayDates(dateToCheck time.Time) (bool, int64, string, error) {
 	var playdates DndPlayDate
 	res := db.Where("DATE_TRUNC('day', date_of_play::date) = DATE_TRUNC('day', ?::date)", dateToCheck).Take(&playdates)
 	if res.Error != nil {
-		log.Printf("Error: %v", res.Error)
+		if res.Error == gorm.ErrRecordNotFound {
+			return false, 0, "", nil
+		}
 		return false, 0, "", res.Error
 	}
 	return true, playdates.DndCampaignTcId, playdates.DndCampaignRoleId, nil

@@ -35,7 +35,7 @@ func main() {
 	discord.AddHandler(bot.HandleMessageEvents)
 	discord.AddHandler(bot.HandleVoiceStateUpdate)
 
-	log.Println("Bot is now running. Press Ctrl+C to exit.")
+	log.Printf("Venova is online.")
 	dbUsername := os.Getenv("DB_USER")
 	dbHost := os.Getenv("DB_HOST")
 	dbDB := os.Getenv("DB_DB")
