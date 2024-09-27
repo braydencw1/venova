@@ -1,6 +1,6 @@
 module venova
 
-go 1.20
+go 1.23.1
 
 require (
 	github.com/bwmarrin/discordgo v0.27.1

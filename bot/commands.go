@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -61,7 +62,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
 		return
 	}
-
+	// Set dnd play date
 	if parts[0] == "!play" && msg.Author.ID == morthisId {
 		layout := "01-02-2006"
 		t, err := time.Parse(layout, parts[1])
@@ -81,6 +82,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 		}
 	}
+	// Set timer
 	if parts[0] == "!set" && (msg.Author.ID == morthisId || msg.Author.ID == bettyId) {
 		extraParts := strings.SplitN(parts[1], " ", 2)
 		log.Printf("Creating a timer for %s", msg.Author.Username)
@@ -111,6 +113,8 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			log.Printf("Error with the timer routine, %v", err)
 		}
 	}
+
+	// Check when nearest dnd date is
 	if parts[0] == "!when" {
 		now := time.Now()
 		currRoleId := getMemberDNDRole(member)
@@ -128,6 +132,30 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		} else {
 			discord.ChannelMessageSend(s, fmtDate)
 		}
+	}
+
+	if parts[0] == "!rjoin" {
+		roleInit := strings.ReplaceAll(parts[1], "<@&", "")
+		role := strings.ReplaceAll(roleInit, ">", "")
+		if slices.Contains(joinableRoles, role) {
+			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, role)
+		}
+		if err != nil {
+			log.Printf("error adding role: %s", err)
+		}
+		log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, role)
+	}
+
+	if parts[0] == "!rleave" {
+		roleInit := strings.ReplaceAll(parts[1], "<@&", "")
+		role := strings.ReplaceAll(roleInit, ">", "")
+		if slices.Contains(joinableRoles, role) {
+			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, role)
+		}
+		if err != nil {
+			log.Printf("error removing role: %s", err)
+		}
+		log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, role)
 	}
 
 	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {

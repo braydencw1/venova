@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -24,6 +23,12 @@ var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
 var griefers []string = []string{}
 
+var joinableRoles = []string{
+	"1250598584534175784",
+	"1282817878244200488",
+	"1079585245575270480",
+}
+
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
@@ -35,7 +40,7 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
-	} else if slices.Contains(msg.MentionRoles, bangersRoleId) {
+	} else if msg.Content == fmt.Sprintf("<@&%s>", bangersRoleId) {
 		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
