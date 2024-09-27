@@ -134,13 +134,18 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 
 	if parts[0] == "!rlist" {
+		rIndex := 0
+		rLength := len(joinableRolesMap)
 		rolesString := ""
-		log.Printf("activating")
-		for roleNames := range joinableRolesMap {
-			rolesString += fmt.Sprintf("%s, ", roleNames)
-			log.Printf("%s", roleNames)
+		for roleName := range joinableRolesMap {
+			rIndex += 1
+			if rIndex != rLength {
+				rolesString += fmt.Sprintf("%s, ", roleName)
+			} else if rIndex == rLength {
+				rolesString += fmt.Sprintf("%s.", roleName)
+			}
 		}
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s. Available commands: !rjoin & !rleave.", rolesString))
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s\n Available commands: !rjoin & !rleave.", rolesString))
 	}
 
 	if parts[0] == "!rjoin" {
