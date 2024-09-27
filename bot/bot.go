@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -41,7 +40,7 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
-	} else if slices.Contains(msg.MentionRoles, bangersRoleId) {
+	} else if msg.Content == fmt.Sprintf("<@&%s>", bangersRoleId) {
 		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
