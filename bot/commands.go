@@ -145,9 +145,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID)
 			if err != nil {
 				log.Printf("error adding role: %s", err)
+			} else {
+				log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
+				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
 			}
-			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
-			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
 		}
 	}
 
@@ -156,9 +157,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
 			if err != nil {
 				log.Printf("error removing role: %s", err)
+			} else {
+				log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
+				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
 			}
-			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
-			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
 		}
 	}
 
