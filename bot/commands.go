@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -134,18 +136,8 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 
 	if parts[0] == "!rlist" {
-		rIndex := 0
-		rLength := len(joinableRolesMap)
-		rolesString := ""
-		for roleName := range joinableRolesMap {
-			rIndex += 1
-			if rIndex != rLength {
-				rolesString += fmt.Sprintf("%s, ", roleName)
-			} else if rIndex == rLength {
-				rolesString += fmt.Sprintf("%s.", roleName)
-			}
-		}
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s\n Available commands: !rjoin & !rleave.", rolesString))
+		rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
 	}
 
 	if parts[0] == "!rjoin" {
@@ -153,9 +145,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID)
 			if err != nil {
 				log.Printf("error adding role: %s", err)
+			} else {
+				log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
+				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
 			}
-			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
-			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
 		}
 	}
 
@@ -164,9 +157,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
 			if err != nil {
 				log.Printf("error removing role: %s", err)
+			} else {
+				log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
+				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
 			}
-			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
-			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
 		}
 	}
 
