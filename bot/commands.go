@@ -136,7 +136,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if parts[0] == "!rlist" {
 		rolesString := ""
 		log.Printf("activating")
-		for _, roleNames := range joinableRolesList {
+		for roleNames := range joinableRolesMap {
 			rolesString += fmt.Sprintf("%s, ", roleNames)
 			log.Printf("%s", roleNames)
 		}
