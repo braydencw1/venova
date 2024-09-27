@@ -24,6 +24,12 @@ var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
 var griefers []string = []string{}
 
+var joinableRoles = []string{
+	"1250598584534175784",
+	"1282817878244200488",
+	"1079585245575270480",
+}
+
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
