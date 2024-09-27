@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -134,18 +136,8 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	}
 
 	if parts[0] == "!rlist" {
-		rIndex := 0
-		rLength := len(joinableRolesMap)
-		rolesString := ""
-		for roleName := range joinableRolesMap {
-			rIndex += 1
-			if rIndex != rLength {
-				rolesString += fmt.Sprintf("%s, ", roleName)
-			} else if rIndex == rLength {
-				rolesString += fmt.Sprintf("%s.", roleName)
-			}
-		}
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s\n Available commands: !rjoin & !rleave.", rolesString))
+		rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
 	}
 
 	if parts[0] == "!rjoin" {
