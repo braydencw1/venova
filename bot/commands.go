@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 	"venova/db"
@@ -134,28 +133,34 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		}
 	}
 
+	if parts[0] == "!rlist" {
+		rolesString := ""
+		log.Printf("activating")
+		for _, roleNames := range joinableRolesList {
+			rolesString += fmt.Sprintf("%s, ", roleNames)
+			log.Printf("%s", roleNames)
+		}
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s", rolesString))
+	}
+
 	if parts[0] == "!rjoin" {
-		roleInit := strings.ReplaceAll(parts[1], "<@&", "")
-		role := strings.ReplaceAll(roleInit, ">", "")
-		if slices.Contains(joinableRoles, role) {
-			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, role)
+		if roleID, exists := joinableRolesMap[parts[1]]; exists {
+			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID)
+			if err != nil {
+				log.Printf("error adding role: %s", err)
+			}
+			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
 		}
-		if err != nil {
-			log.Printf("error adding role: %s", err)
-		}
-		log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, role)
 	}
 
 	if parts[0] == "!rleave" {
-		roleInit := strings.ReplaceAll(parts[1], "<@&", "")
-		role := strings.ReplaceAll(roleInit, ">", "")
-		if slices.Contains(joinableRoles, role) {
-			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, role)
+		if roleID, exists := joinableRolesMap[parts[1]]; exists {
+			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
+			if err != nil {
+				log.Printf("error removing role: %s", err)
+			}
+			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
 		}
-		if err != nil {
-			log.Printf("error removing role: %s", err)
-		}
-		log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, role)
 	}
 
 	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {

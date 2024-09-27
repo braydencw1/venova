@@ -22,11 +22,16 @@ var mcRoleId string = "1183228947874459668"
 var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
 var griefers []string = []string{}
+var joinableRolesList = []string{
+	"bangers",
+	"dorklock",
+	"apes",
+}
 
-var joinableRoles = []string{
-	"1250598584534175784",
-	"1282817878244200488",
-	"1079585245575270480",
+var joinableRolesMap = map[string]string{
+	"apes":     "1250598584534175784",
+	"dorklock": "1282817878244200488",
+	"bangers":  "1079585245575270480",
 }
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
