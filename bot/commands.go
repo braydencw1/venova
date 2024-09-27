@@ -140,7 +140,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			rolesString += fmt.Sprintf("%s, ", roleNames)
 			log.Printf("%s", roleNames)
 		}
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s", rolesString))
+		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s. Available commands: !rjoin & !rleave.", rolesString))
 	}
 
 	if parts[0] == "!rjoin" {
@@ -150,6 +150,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 				log.Printf("error adding role: %s", err)
 			}
 			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
+			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
 		}
 	}
 
@@ -160,6 +161,7 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 				log.Printf("error removing role: %s", err)
 			}
 			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
+			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
 		}
 	}
 
