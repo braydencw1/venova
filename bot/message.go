@@ -27,7 +27,6 @@ func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 	parts := strings.SplitN(msg.Content, " ", 2)
 
-	// Remove the prefix "!" from the command
 	command := strings.TrimPrefix(parts[0], "!")
 
 	if fn, ok := botCommandsWithArgs[command]; ok {
