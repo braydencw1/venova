@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -21,7 +20,7 @@ func dmUser(discord *discordgo.Session, userId, msg string) {
 	discord.ChannelMessageSend(dmChannel.ID, msg)
 }
 
-func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID != discord.State.User.ID {
 		log.Printf(msg.Author.Username + ": " + msg.Content)
 	}
@@ -30,8 +29,10 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 	command := strings.TrimPrefix(parts[0], "!")
 	if len(parts) < 2 {
-		if fn, ok := botCommandsWithArgs[fmt.Sprintf(command)]; ok {
+		if fn, ok := botCommandsWithArgs[command]; ok {
 			fn(discord, msg, parts)
+		} else if fn, ok := botCommandsWithoutArgs[command]; ok {
+			fn(discord, msg)
 		} else {
 			log.Printf("Invalid Command.")
 			discord.ChannelMessageSend(msg.ChannelID, "Invalid command.")

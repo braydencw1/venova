@@ -17,20 +17,23 @@ var botCommandsWithArgs = map[string]func(*discordgo.Session, *discordgo.Message
 	"mc": mcCmd,
 	// Play Dnd Date (Admin)
 	"play": playCmd,
-	// Restart Minecraft Server
-	"restart": restartMcCmd,
 	// Join role from list
 	"rjoin": roleJoinCmd,
 	// Leave role from list
 	"rleave": roleLeaveCmd,
-	// List joinable roles
-	"rlist": roleListCmd,
 	// Set timer
 	"set": setTimerCmd,
 	//See when dnd is
 	"when": whenIsDndCmd,
 	//Whitelist Minecraft
 	"whitelist": whitelistCmd,
+}
+
+var botCommandsWithoutArgs = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
+	// Restart Minecraft Server
+	"restart": restartMcCmd,
+	// List joinable roles
+	"rlist": roleListCmd,
 }
 
 func mcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
@@ -67,7 +70,7 @@ func playCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []s
 		}
 	}
 }
-func restartMcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, _ []string) {
+func restartMcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if memberHasRole(msg.Member, mcRoleId) {
 		mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
 
@@ -79,7 +82,7 @@ func restartMcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, _ []
 	}
 }
 
-func roleListCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, _ []string) {
+func roleListCmd(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
 	discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
 }
