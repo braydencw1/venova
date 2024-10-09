@@ -12,38 +12,36 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func memberHasRole(member *discordgo.Member, roleId string) bool {
-	for _, memberRoleId := range member.Roles {
-		if memberRoleId == roleId {
-			return true
-		}
-	}
-	return false
+var BotCommands = map[string]func(*discordgo.Session, *discordgo.MessageCreate, []string){
+	//Minecraft Commands
+	"mc": mcCmd,
+	// Play Dnd Date (Admin)
+	"play": playCmd,
+	// Restart Minecraft Server
+	"restart": restartMcCmd,
+	// Join role from list
+	"rjoin": roleJoinCmd,
+	// Leave role from list
+	"rleave": roleLeaveCmd,
+	// List joinable roles
+	"rlist": roleListCmd,
+	// Set timer
+	"set": setTimerCmd,
+	//See when dnd is
+	"when": whenIsDndCmd,
+	//Whitelist Minecraft
+	"whitelist": whitelistCmd,
 }
 
-func getMemberDNDRole(member *discordgo.Member) string {
-	res, err := db.GetDndRoles()
-	if err != nil {
-		log.Printf("Could not retrieve role Ids from DB")
-	}
-	for _, memberRoleId := range member.Roles {
-		for _, arrayRoleId := range res {
-			if memberRoleId == arrayRoleId {
-				return memberRoleId
-			}
+func mcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	if msg.Author.ID == blueId || msg.Author.ID == morthisId {
+		res, err := minecraftCommand(parts[1])
+		if err != nil {
+			log.Printf("Err: %s", err)
+			discord.ChannelMessageSend(msg.ChannelID, "Sorry you're not in a Minecraft Server Admin", nil)
 		}
+		discord.ChannelMessageSend(msg.ChannelID, res)
 	}
-	return ""
-}
-func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
-	var member *discordgo.Member
-	for _, m := range guild.Members {
-		if m.User.ID == userId {
-			member = m
-			break
-		}
-	}
-	return member
 }
 
 func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -63,17 +61,28 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
 		return
 	}
+
+	if fn, ok := BotCommands[fmt.Sprintf("!%s", parts[0])]; ok {
+		fn(discord, msg, parts)
+	} else {
+		log.Printf("Invalid Command.")
+		discord.ChannelMessageSend(msg.ChannelID, "Invalid command.", nil)
+	}
+}
+
+func playCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
 	// Set dnd play date
-	if parts[0] == "!play" && msg.Author.ID == morthisId {
+	if msg.Author.ID == morthisId {
 		layout := "01-02-2006"
 		t, err := time.Parse(layout, parts[1])
 		if err != nil {
 			fmt.Println("Error parsing date:", err)
 			return
 		}
-		currRoleId := getMemberDNDRole(member)
+		currRoleId := getMemberDNDRole(msg.Member)
 		if currRoleId == "" {
 			log.Printf("Role not found.")
+			discord.ChannelMessageSend(msg.ChannelID, "Your dnd role is not found in the db.")
 		} else {
 			err := db.InsertPlayDate(t, currRoleId)
 			if err != nil {
@@ -83,8 +92,49 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 		}
 	}
-	// Set timer
-	if parts[0] == "!set" && (msg.Author.ID == morthisId || msg.Author.ID == bettyId) {
+}
+func restartMcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, _ []string) {
+	if memberHasRole(msg.Member, mcRoleId) {
+		mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
+
+		go func() {
+			restartMinecraft()
+			time.Sleep(time.Second * 5)
+			discord.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, "Minecraft server restarted!")
+		}()
+	}
+}
+
+func roleListCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, _ []string) {
+	rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
+	discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
+}
+
+func roleLeaveCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	if roleID, exists := joinableRolesMap[parts[1]]; exists {
+		err := discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
+		if err != nil {
+			log.Printf("error removing role: %s", err)
+		} else {
+			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
+			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
+		}
+	}
+}
+func roleJoinCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	if roleID, exists := joinableRolesMap[parts[1]]; exists {
+		err := discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID)
+		if err != nil {
+			log.Printf("error adding role: %s", err)
+		} else {
+			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
+			discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
+		}
+	}
+}
+
+func setTimerCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	if msg.Author.ID == morthisId || msg.Author.ID == bettyId {
 		extraParts := strings.SplitN(parts[1], " ", 2)
 		log.Printf("Creating a timer for %s", msg.Author.Username)
 		if len(extraParts) == 1 {
@@ -114,78 +164,34 @@ func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			log.Printf("Error with the timer routine, %v", err)
 		}
 	}
+}
 
-	// Check when nearest dnd date is
-	if parts[0] == "!when" {
-		now := time.Now()
-		currRoleId := getMemberDNDRole(member)
-		if currRoleId == "" {
-			log.Printf("Could not find Dnd Role")
-		}
-		dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
+func whenIsDndCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	now := time.Now()
+	currRoleId := getMemberDNDRole(msg.Member)
+	if currRoleId == "" {
+		log.Printf("Could not find Dnd Role")
+	}
+	dateOfPlay, tcId, err := db.GetLatestPlayDate(currRoleId)
+	if err != nil {
+		log.Printf("Error parsing Latest playDate, %v", err)
+	}
+	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
+	s := fmt.Sprintf("%v", tcId)
+	if dateOfPlay.Before(now) {
+		discord.ChannelMessageSend(s, fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
+	} else {
+		discord.ChannelMessageSend(s, fmtDate)
+	}
+}
+
+func whitelistCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []string) {
+	if memberHasRole(msg.Member, mcRoleId) {
+		log.Printf("Whitelisting, %s ", parts[1])
+		res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
 		if err != nil {
-			log.Printf("Error parsing Latest playDate, %v", err)
+			log.Printf("Err: %s", err)
 		}
-		fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
-		s := fmt.Sprintf("%v", tcId)
-		if dateOfPlay.Before(now) {
-			discord.ChannelMessageSend(s, fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
-		} else {
-			discord.ChannelMessageSend(s, fmtDate)
-		}
-	}
-
-	if parts[0] == "!rlist" {
-		rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
-	}
-
-	if parts[0] == "!rjoin" {
-		if roleID, exists := joinableRolesMap[parts[1]]; exists {
-			err = discord.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID)
-			if err != nil {
-				log.Printf("error adding role: %s", err)
-			} else {
-				log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
-				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been added to the group %s.", parts[1]))
-			}
-		}
-	}
-
-	if parts[0] == "!rleave" {
-		if roleID, exists := joinableRolesMap[parts[1]]; exists {
-			err = discord.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
-			if err != nil {
-				log.Printf("error removing role: %s", err)
-			} else {
-				log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
-				discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("You've been removed from the group %s.", parts[1]))
-			}
-		}
-	}
-
-	if memberHasRole(member, mcRoleId) || memberHasRole(member, frostedRoleId) {
-		if parts[0] == "!restart" {
-			mcMsg, _ := discord.ChannelMessageSend(msg.ChannelID, "Restarting the minecraft server...")
-
-			go func() {
-				restartMinecraft()
-				time.Sleep(time.Second * 5)
-				discord.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, "Minecraft server restarted!")
-			}()
-		} else if parts[0] == "!mc" && (msg.Author.ID == blueId || msg.Author.ID == morthisId) {
-			res, err := minecraftCommand(parts[1])
-			if err != nil {
-				log.Printf("Err: %s", err)
-			}
-			discord.ChannelMessageSend(msg.ChannelID, res)
-		} else if strings.HasPrefix(msg.Content, "!whitelist") {
-			log.Printf("Whitelisting, %s ", parts[1])
-			res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
-			if err != nil {
-				log.Printf("Err: %s", err)
-			}
-			discord.ChannelMessageSend(msg.ChannelID, res)
-		}
+		discord.ChannelMessageSend(msg.ChannelID, res)
 	}
 }
