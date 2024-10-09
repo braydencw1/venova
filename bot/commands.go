@@ -12,7 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var BotCommands = map[string]func(*discordgo.Session, *discordgo.MessageCreate, []string){
+var botCommandsWithArgs = map[string]func(*discordgo.Session, *discordgo.MessageCreate, []string){
 	//Minecraft Commands
 	"mc": mcCmd,
 	// Play Dnd Date (Admin)
@@ -41,32 +41,6 @@ func mcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []str
 			discord.ChannelMessageSend(msg.ChannelID, "Sorry you're not in a Minecraft Server Admin", nil)
 		}
 		discord.ChannelMessageSend(msg.ChannelID, res)
-	}
-}
-
-func HandleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
-	if msg.Author.ID != discord.State.User.ID {
-		log.Printf(msg.Author.Username + ": " + msg.Content)
-	}
-
-	parts := strings.SplitN(msg.Content, " ", 2)
-	guild, err := discord.State.Guild(msg.GuildID)
-	if err != nil {
-		log.Printf("Failed to fetch message guild id (dm?): %v", err)
-		return
-	}
-
-	member := getGuildMember(guild, msg.Author.ID)
-	if member == nil {
-		log.Printf("Failed to find message guild member: %v", msg.Author.ID)
-		return
-	}
-
-	if fn, ok := BotCommands[fmt.Sprintf("!%s", parts[0])]; ok {
-		fn(discord, msg, parts)
-	} else {
-		log.Printf("Invalid Command.")
-		discord.ChannelMessageSend(msg.ChannelID, "Invalid command.", nil)
 	}
 }
 
