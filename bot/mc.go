@@ -25,22 +25,27 @@ func restartMinecraft() {
 }
 
 func minecraftCommand(command string) (string, error) {
-
 	rconHost := os.Getenv("MC_HOST")
 	rconPort := os.Getenv("RCON_PORT")
 	rconPass := os.Getenv("RCON_PASS")
 
-	con, err := rcon.Dial(fmt.Sprintf("%s:%s", rconHost, rconPort), rconPass)
-	if err != nil {
-		log.Printf("Error, %s:", err)
+	if rconHost == "" || rconPort == "" || rconPass == "" {
+		err := fmt.Errorf("missing rcon env vars")
+		log.Printf("Error: %v", err)
 		return "", err
 	}
+
+	con, err := rcon.Dial(fmt.Sprintf("%s:%s", rconHost, rconPort), rconPass)
+	if err != nil {
+		log.Printf("Error connecting to RCON: %s", err)
+		return "", fmt.Errorf("unable to connect to rcon server: %s", err)
+	}
 	defer con.Close()
-	response, err := con.Execute(command)
+	resp, err := con.Execute(command)
 	if err != nil {
 		log.Printf("Error, %s", err)
 		return "", err
 	}
-	log.Printf("Response %s", response)
-	return response, nil
+	log.Printf("Response %s", resp)
+	return resp, nil
 }

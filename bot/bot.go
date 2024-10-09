@@ -43,8 +43,8 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
 	}
 
-	AddGriefer(discord, msg)
-	HandleCommands(discord, msg)
+	addGriefer(discord, msg)
+	handleCommands(discord, msg)
 }
 
 func GetUsernameFromID(session *discordgo.Session, userID string) (string, error) {
@@ -55,7 +55,7 @@ func GetUsernameFromID(session *discordgo.Session, userID string) (string, error
 	return user.Username, nil
 }
 
-func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.Split(msg.Content, " ")
 
 	if parts[0] == "!grief" {
