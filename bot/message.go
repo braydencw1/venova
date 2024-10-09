@@ -27,15 +27,19 @@ func handleCommands(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 
 	parts := strings.SplitN(msg.Content, " ", 2)
 
+	// Remove the prefix "!" from the command
 	command := strings.TrimPrefix(parts[0], "!")
-	if len(parts) < 2 {
-		if fn, ok := botCommandsWithArgs[command]; ok {
-			fn(discord, msg, parts)
-		} else if fn, ok := botCommandsWithoutArgs[command]; ok {
-			fn(discord, msg)
-		} else {
-			log.Printf("Invalid Command.")
-			discord.ChannelMessageSend(msg.ChannelID, "Invalid command.")
+
+	if fn, ok := botCommandsWithArgs[command]; ok {
+		if len(parts) < 2 {
+			discord.ChannelMessageSend(msg.ChannelID, "Need more arguments for command.")
+			return
 		}
+		fn(discord, msg, parts)
+	} else if fn, ok := botCommandsWithoutArgs[command]; ok {
+		fn(discord, msg)
+	} else {
+		log.Printf("Invalid Command.")
+		discord.ChannelMessageSend(msg.ChannelID, "Invalid command.")
 	}
 }

@@ -40,10 +40,12 @@ func mcCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, parts []str
 	if msg.Author.ID == blueId || msg.Author.ID == morthisId {
 		res, err := minecraftCommand(parts[1])
 		if err != nil {
+			discord.ChannelMessageSend(msg.ChannelID, "Could not send command, Minecraft might be offline.")
 			log.Printf("Err: %s", err)
-			discord.ChannelMessageSend(msg.ChannelID, "Sorry you're not in a Minecraft Server Admin", nil)
 		}
 		discord.ChannelMessageSend(msg.ChannelID, res)
+	} else {
+		discord.ChannelMessageSend(msg.ChannelID, "Sorry you're not in a Minecraft Server Admin")
 	}
 }
 
@@ -167,8 +169,11 @@ func whitelistCmd(discord *discordgo.Session, msg *discordgo.MessageCreate, part
 		log.Printf("Whitelisting, %s ", parts[1])
 		res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", parts[1]))
 		if err != nil {
+			discord.ChannelMessageSend(msg.ChannelID, "Could not send command, Minecraft might be offline.")
 			log.Printf("Err: %s", err)
 		}
 		discord.ChannelMessageSend(msg.ChannelID, res)
+	} else {
+		discord.ChannelMessageSend(msg.ChannelID, "You're not a part of the minecraft role.")
 	}
 }

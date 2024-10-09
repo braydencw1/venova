@@ -30,10 +30,18 @@ func minecraftCommand(command string) (string, error) {
 	rconPort := os.Getenv("RCON_PORT")
 	rconPass := os.Getenv("RCON_PASS")
 
+	// Check if environment variables are set
+	if rconHost == "" || rconPort == "" || rconPass == "" {
+		err := fmt.Errorf("missing RCON connection details (MC_HOST, RCON_PORT, or RCON_PASS)")
+		log.Printf("Error: %v", err)
+		return "", err
+	}
+
+	// Attempt to connect to the RCON server
 	con, err := rcon.Dial(fmt.Sprintf("%s:%s", rconHost, rconPort), rconPass)
 	if err != nil {
-		log.Printf("Error, %s:", err)
-		return "", err
+		log.Printf("Error connecting to RCON: %s", err)
+		return "", fmt.Errorf("unable to connect to RCON server: %s", err)
 	}
 	defer con.Close()
 	response, err := con.Execute(command)
