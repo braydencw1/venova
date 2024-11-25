@@ -15,6 +15,6 @@ jobs:
       with:
         go-version: 'stable'
     - name: build
-      run: go build
+      run: go build cmd/venova/main.go
     - name: Golangci-lint
       uses: golangci/golangci-lint-action@v6.1.1
