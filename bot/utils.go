@@ -30,13 +30,14 @@ func getMemberDNDRole(member *discordgo.Member) string {
 	}
 	return ""
 }
-func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
-	var member *discordgo.Member
-	for _, m := range guild.Members {
-		if m.User.ID == userId {
-			member = m
-			break
-		}
-	}
-	return member
-}
+
+// func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
+// 	var member *discordgo.Member
+// 	for _, m := range guild.Members {
+// 		if m.User.ID == userId {
+// 			member = m
+// 			break
+// 		}
+// 	}
+// 	return member
+// }

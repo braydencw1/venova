@@ -10,18 +10,23 @@ import (
 	"github.com/gorcon/rcon"
 )
 
+type minecraftAction struct {
+	Message string
+	Command string
+}
+
+var minecraftActions = map[string]minecraftAction{
+	"up":      {Message: "The Minecraft Server has been brought up", Command: "up -d"},
+	"down":    {Message: "The Minecraft server has been brought down", Command: "down"},
+	"restart": {Message: "The Minecraft server has been restarted.", Command: "restart"},
+}
+
 func manageMinecraftCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	sess := ctx.Session
 	args := ctx.Args
-	actions := map[string]struct {
-		Message string
-		Command string
-	}{
-		"up":      {"The Minecraft Server has been brought up", "up -d"},
-		"down":    {"The Minecraft server has been brought down", "down"},
-		"restart": {"The Minecraft server has been restarted.", "restart"},
-	}
+	actions := minecraftActions
+
 	if action, exists := actions[args[0]]; exists {
 		if memberHasRole(msg.Member, mcRoleId) || msg.Author.ID == morthisId {
 			mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")
@@ -30,19 +35,31 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 				err := execDockerCompose(action.Command)
 				if err != nil {
 					log.Printf("%s", err)
-					ctx.Reply(fmt.Sprintf("%s", err))
+					err := ctx.Reply(fmt.Sprintf("%s", err))
+					if err != nil {
+						log.Printf("error replying manageMinecraftCmd %s", err)
+					}
 					return
 				}
 				time.Sleep(time.Second * 5)
-				sess.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, action.Message)
+				_, err = sess.ChannelMessageEdit(msg.ChannelID, mcMsg.ID, action.Message)
+				if err != nil {
+					log.Printf("error editting message inside of manageMiencraftCmd %s", err)
+				}
 			}()
 			return nil
 		}
 	} else {
-		ctx.Reply("Action is not available")
+		err := ctx.Reply("Action is not available")
+		if err != nil {
+			log.Printf("reply err manageMinecraftCmd %s", err)
+		}
 		return nil
 	}
-	ctx.Reply("You're not a minecraft administrator.")
+	err := ctx.Reply("You're not a minecraft administrator.")
+	if err != nil {
+		log.Printf("reply err manageMinecraftCmd %s", err)
+	}
 	return nil
 }
 
@@ -108,12 +125,21 @@ func whitelistCmd(ctx CommandCtx) error {
 		log.Printf("Whitelisting, %s ", args[0])
 		res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", args[0]))
 		if err != nil {
-			ctx.Reply("Could not send command, Minecraft might be offline.")
+			err := ctx.Reply("Could not send command, Minecraft might be offline.")
+			if err != nil {
+				log.Printf("err reply whiteListCmd %s", err)
+			}
 			return fmt.Errorf("minecraft might be offline. err: %w", err)
 		}
-		ctx.Reply(res)
+		err = ctx.Reply(res)
+		if err != nil {
+			log.Printf("err reply whiteListCmd %s", err)
+		}
 	} else {
-		ctx.Reply("You're not a miencraft admin.")
+		err := ctx.Reply("You're not a miencraft admin.")
+		if err != nil {
+			log.Printf("err reply whiteListCmd %s", err)
+		}
 	}
 	return nil
 }

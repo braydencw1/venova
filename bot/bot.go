@@ -19,7 +19,6 @@ var blueId string = "202213189482446851"
 var bangersRoleId string = "1079585245575270480"
 
 var mcRoleId string = "1183228947874459668"
-var frostedRoleId string = "618635064451923979"
 var channelId string = "209403061205073931"
 var griefers []string = []string{}
 var joinableRolesMap = map[string]string{
@@ -38,9 +37,15 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
-		discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
+		_, err := discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
+		if err != nil {
+			log.Printf("error sending message inside HandleMessageEvents: %s", err)
+		}
 	} else if msg.Content == fmt.Sprintf("<@&%s>", bangersRoleId) {
-		discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
+		_, err := discord.ChannelMessageSend(msg.ChannelID, "https://imgur.com/K7lTDGU")
+		if err != nil {
+			log.Printf("error sending message inside HandleMessageEvents: %s", err)
+		}
 	}
 
 	addGriefer(discord, msg)
@@ -60,7 +65,10 @@ func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if parts[0] == "!grief" {
 		if len(msg.Mentions) == 0 {
 			if len(griefers) == 0 {
-				discord.ChannelMessageSend(msg.ChannelID, "Nobody is getting griefed!")
+				_, err := discord.ChannelMessageSend(msg.ChannelID, "Nobody is getting griefed!")
+				if err != nil {
+					log.Printf("error sending msg addGreifer %s", err)
+				}
 
 				return
 			} else {
@@ -69,7 +77,10 @@ func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 				for _, grief := range griefers {
 					myGriefees = append(myGriefees, fmt.Sprintf("<@%s>", grief))
 				}
-				discord.ChannelMessageSend(msg.ChannelID, strings.Join(myGriefees, " "))
+				_, err := discord.ChannelMessageSend(msg.ChannelID, strings.Join(myGriefees, " "))
+				if err != nil {
+					log.Printf("error sending msg addGriefer %s", err)
+				}
 
 				return
 			}
@@ -79,7 +90,10 @@ func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 			griefers = append(griefers, mention.ID)
 		}
 
-		discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
+		_, err := discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
+		if err != nil {
+			log.Printf("error sending msg addGriefer %s", err)
+		}
 
 		return
 	}
@@ -91,12 +105,16 @@ func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStat
 	}
 
 	if msg.VoiceState.UserID == morthisId {
-		discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello cutie <@%s>", morthisId))
+		_, err := discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello cutie <@%s>", morthisId))
+		if err != nil {
+			log.Printf("error sending msg HandleVoiceStateUpdate %s", err)
+		}
 	}
 
 	for _, griefee := range griefers {
 		if msg.VoiceState.UserID == griefee {
-			discord.GuildMemberMove(msg.GuildID, griefee, &channelId)
+			err := discord.GuildMemberMove(msg.GuildID, griefee, &channelId)
+			log.Printf("error moving user, HandleVoiceStateUpdate %s", err)
 		}
 	}
 }
@@ -119,7 +137,10 @@ func playDateCheck(discord *discordgo.Session) {
 
 	msg := fmt.Sprintf("Dnd is scheduled for tomorrow <@&%v>", roleId)
 	if res {
-		discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
+		_, err := discord.ChannelMessageSend(fmt.Sprintf("%v", tcId), msg)
+		if err != nil {
+			log.Printf("err send msg palyDateCheck %s", err)
+		}
 	}
 }
 

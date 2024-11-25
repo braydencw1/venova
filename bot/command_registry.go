@@ -35,9 +35,10 @@ func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error
 		numRequiredArgs: numArgs,
 	}
 }
+
 func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID != s.State.User.ID {
-		log.Printf(msg.Author.Username + ": " + msg.Content)
+		log.Printf("%s: %s", msg.Author.Username, msg.Content)
 	}
 
 	parts := strings.SplitN(msg.Content, " ", 2)
@@ -60,7 +61,10 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 	}
 	if command.numRequiredArgs > 0 {
 		if len(args) < command.numRequiredArgs {
-			s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("the command %s has too few arguements.", commandName))
+			_, err := s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("the command %s has too few arguements.", commandName))
+			if err != nil {
+				log.Printf("err msgSend HandleMessage %s", err)
+			}
 			return
 		}
 	}
