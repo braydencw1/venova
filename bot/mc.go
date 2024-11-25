@@ -23,7 +23,6 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 		"restart": {"The Minecraft server has been restarted.", "restart"},
 	}
 	if action, exists := actions[args[0]]; exists {
-		log.Printf(action.Command)
 		if memberHasRole(msg.Member, mcRoleId) || msg.Author.ID == morthisId {
 			mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")
 
