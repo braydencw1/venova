@@ -44,7 +44,6 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 	}
 
 	addGriefer(discord, msg)
-	handleCommands(discord, msg)
 }
 
 func GetUsernameFromID(session *discordgo.Session, userID string) (string, error) {

@@ -34,7 +34,6 @@ func main() {
 	discord.AddHandler(bot.OnReady)
 	discord.AddHandler(bot.HandleMessageEvents)
 	discord.AddHandler(bot.HandleVoiceStateUpdate)
-
 	log.Printf("Venova is online.")
 	dbUsername := os.Getenv("DB_USER")
 	dbHost := os.Getenv("DB_HOST")
@@ -46,6 +45,10 @@ func main() {
 	if err != nil {
 		log.Panicf("Database connection is rough, to say the least: %v", err)
 	}
+	// Creates / registers all cmds
+	cr := bot.InitCommands()
+	discord.AddHandler(cr.HandleMessage)
+
 	go bot.BirthdateCheckRoutine(discord)
 	go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
