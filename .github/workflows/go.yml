@@ -1,0 +1,20 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+    - name: build
+      run: go build
+    - name: Golangci-lint
+      uses: golangci/golangci-lint-action@v6.1.1
