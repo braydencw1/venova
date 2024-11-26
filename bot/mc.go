@@ -25,9 +25,8 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	sess := ctx.Session
 	args := ctx.Args
-	actions := minecraftActions
 
-	if action, exists := actions[args[0]]; exists {
+	if action, exists := minecraftActions[args[0]]; exists {
 		if memberHasRole(msg.Member, mcRoleId) || msg.Author.ID == morthisId {
 			mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")
 
