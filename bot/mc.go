@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 	"venova/sshcmd"
 
@@ -55,7 +56,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 func mcCmd(ctx CommandCtx) error {
 	m := ctx.Message
 	if m.Author.ID == blueId || m.Author.ID == morthisId {
-		res, err := minecraftCommand(ctx.Args[0])
+		res, err := minecraftCommand(strings.Join(ctx.Args, " "))
 		if err != nil {
 			log.Printf("Err: %s", err)
 			return ctx.Reply("Could not send command, Minecraft might be offline.")
