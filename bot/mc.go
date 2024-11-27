@@ -61,6 +61,9 @@ func mcCmd(ctx CommandCtx) error {
 			log.Printf("Err: %s", err)
 			return ctx.Reply("Could not send command, Minecraft might be offline.")
 		}
+		if res == "" {
+			return nil
+		}
 		return ctx.Reply(res)
 	}
 	return ctx.Reply("Sorry you're not a Minecraft server admin.")
@@ -99,7 +102,7 @@ func minecraftCommand(command string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	log.Printf("Cmd here %s", command)
 	con, err := rcon.Dial(fmt.Sprintf("%s:%s", host, port), pass)
 	if err != nil {
 		log.Printf("Error connecting to RCON: %s", err)
@@ -111,7 +114,6 @@ func minecraftCommand(command string) (string, error) {
 		log.Printf("Error, %s", err)
 		return "", err
 	}
-	log.Printf("Response %s", resp)
 	return resp, nil
 }
 
