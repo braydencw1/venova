@@ -35,6 +35,9 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 	if msg.Author.ID == discord.State.User.ID {
 		return
 	}
+	if msg.Author.ID != discord.State.User.ID {
+		log.Printf("%s: %s", msg.Author.Username, msg.Content)
+	}
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		_, err := discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))
@@ -47,8 +50,6 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 			log.Printf("error sending message inside HandleMessageEvents: %s", err)
 		}
 	}
-
-	addGriefer(discord, msg)
 }
 
 func GetUsernameFromID(session *discordgo.Session, userID string) (string, error) {
@@ -59,7 +60,7 @@ func GetUsernameFromID(session *discordgo.Session, userID string) (string, error
 	return user.Username, nil
 }
 
-func addGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
+func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.Split(msg.Content, " ")
 
 	if parts[0] == "!grief" {

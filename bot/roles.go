@@ -12,7 +12,7 @@ func roleListCmd(ctx CommandCtx) error {
 	rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
 	err := ctx.Reply(fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
 	if err != nil {
-		log.Printf("err reply roleListCmd %s", err)
+		return err
 	}
 	return nil
 }
@@ -30,7 +30,7 @@ func roleJoinCmd(ctx CommandCtx) error {
 			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
 			err := ctx.Reply(fmt.Sprintf("You've been added to the group %s.", args[0]))
 			if err != nil {
-				log.Printf("err reply roleJoinCmd %s", err)
+				return err
 			}
 			return nil
 		}
@@ -49,7 +49,7 @@ func roleLeaveCmd(ctx CommandCtx) error {
 			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
 			err := ctx.Reply(fmt.Sprintf("You've been removed from the group %s.", args[0]))
 			if err != nil {
-				log.Printf("reply err roleLeaveCmd %s", err)
+				return err
 			}
 			return nil
 		}

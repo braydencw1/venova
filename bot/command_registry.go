@@ -37,10 +37,6 @@ func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error
 }
 
 func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.MessageCreate) {
-	if msg.Author.ID != s.State.User.ID {
-		log.Printf("%s: %s", msg.Author.Username, msg.Content)
-	}
-
 	parts := strings.SplitN(msg.Content, " ", 2)
 	commandNameWithPrefix := strings.ToLower(parts[0])
 
@@ -74,11 +70,13 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 		Args:    args,
 	}
 	// Found mcCmd and executing
-	err := command.fn(ctx)
-	if err != nil {
-		log.Printf("%s", err)
-	}
-
+	go func() {
+		if err := command.fn(ctx); err != nil {
+			if err := ctx.Reply("Your command failed, perhaps there isn't enough arguments."); err != nil {
+				log.Printf("Handle MSGs err: %s", err)
+			}
+		}
+	}()
 }
 
 func (c *CommandCtx) Reply(s string) error {

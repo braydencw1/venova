@@ -48,6 +48,7 @@ func main() {
 	// Creates / registers all cmds
 	cr := bot.InitCommands()
 	discord.AddHandler(cr.HandleMessage)
+	discord.AddHandler(bot.AddGriefer)
 
 	go bot.BirthdateCheckRoutine(discord)
 	go bot.PlayDateCheckRoutine(discord)

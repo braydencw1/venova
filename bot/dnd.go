@@ -22,7 +22,7 @@ func playCmd(ctx CommandCtx) error {
 			log.Printf("Role not found.")
 			err := ctx.Reply("Your dnd role is not found in the db.")
 			if err != nil {
-				log.Printf("error replying playCmd %s", err)
+				return err
 			}
 		} else {
 			err := db.InsertPlayDate(t, currRoleId)
@@ -31,7 +31,7 @@ func playCmd(ctx CommandCtx) error {
 			}
 			err = ctx.Reply("The Date has been updated.")
 			if err != nil {
-				log.Printf("error replying playCmd %s", err)
+				return err
 			}
 			return nil
 		}
@@ -50,7 +50,7 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	if err != nil {
 		err := ctx.Reply("Could not find play date information. Perhaps wrong server.")
 		if err != nil {
-			log.Printf("error replying whenIsDndCmd %s", err)
+			return err
 		}
 		return fmt.Errorf("error parsing latest playdate %w", err)
 	}
@@ -58,12 +58,12 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	if dateOfPlay.Before(now) {
 		err := ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
 		if err != nil {
-			log.Printf("err reply whenIsDndCmd %s", err)
+			return err
 		}
 	} else {
 		err := ctx.Reply(fmtDate)
 		if err != nil {
-			log.Printf("error replying message whenIsDndCmd %s", err)
+			return err
 		}
 	}
 	return nil
