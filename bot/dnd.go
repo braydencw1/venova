@@ -20,20 +20,15 @@ func playCmd(ctx CommandCtx) error {
 		currRoleId := getMemberDNDRole(msg.Member)
 		if currRoleId == "" {
 			log.Printf("Role not found.")
-			err := ctx.Reply("Your dnd role is not found in the db.")
-			if err != nil {
+			if err := ctx.Reply("Your dnd role is not found in the db."); err != nil {
 				return err
 			}
-		} else {
-			err := db.InsertPlayDate(t, currRoleId)
-			if err != nil {
-				return fmt.Errorf("error inserting into table %w", err)
-			}
-			err = ctx.Reply("The Date has been updated.")
-			if err != nil {
-				return err
-			}
-			return nil
+		}
+		if err := db.InsertPlayDate(t, currRoleId); err != nil {
+			return fmt.Errorf("error inserting into table %w", err)
+		}
+		if err = ctx.Reply("The Date has been updated."); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -48,23 +43,19 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	}
 	dateOfPlay, _, err := db.GetLatestPlayDate(currRoleId)
 	if err != nil {
-		err := ctx.Reply("Could not find play date information. Perhaps wrong server.")
-		if err != nil {
+		if err := ctx.Reply("Could not find play date information. Perhaps wrong server."); err != nil {
 			return err
 		}
 		return fmt.Errorf("error parsing latest playdate %w", err)
 	}
 	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
 	if dateOfPlay.Before(now) {
-		err := ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
-		if err != nil {
+		if err := ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate)); err != nil {
 			return err
 		}
-	} else {
-		err := ctx.Reply(fmtDate)
-		if err != nil {
-			return err
-		}
+	}
+	if err = ctx.Reply(fmtDate); err != nil {
+		return err
 	}
 	return nil
 }

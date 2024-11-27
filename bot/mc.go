@@ -37,8 +37,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 			err := execDockerCompose(action.Command)
 			if err != nil {
 				log.Printf("%s", err)
-				err := ctx.Reply(fmt.Sprintf("%s", err))
-				if err != nil {
+				if err := ctx.Reply(fmt.Sprintf("%s", err)); err != nil {
 					log.Printf("error replying manageMinecraftCmd %s", err)
 				}
 				return
