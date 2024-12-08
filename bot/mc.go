@@ -128,12 +128,10 @@ func whitelistCmd(ctx CommandCtx) error {
 				return err
 			}
 		}
-		if err = ctx.Reply(res); err != nil {
+		if err := ctx.Reply(res); err != nil {
 			return err
 		}
-		if err := ctx.Reply("You're not a minecraft admin."); err != nil {
-			return err
-		}
+
 	}
 	return nil
 

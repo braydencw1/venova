@@ -10,10 +10,7 @@ import (
 
 func roleListCmd(ctx CommandCtx) error {
 	rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
-	if err := ctx.Reply(fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString)); err != nil {
-		return err
-	}
-	return nil
+	return ctx.Reply(fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
 }
 
 func roleJoinCmd(ctx CommandCtx) error {
@@ -25,13 +22,9 @@ func roleJoinCmd(ctx CommandCtx) error {
 		if err != nil {
 			log.Printf("error adding role: %s", err)
 			return fmt.Errorf("error adding user to role: %w", err)
-		} else {
-			log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
-			if err := ctx.Reply(fmt.Sprintf("You've been added to the group %s.", args[0])); err != nil {
-				return err
-			}
-			return nil
 		}
+		log.Printf("Added user with id: %s (%s) to %s role", msg.Author.ID, msg.Author.Username, roleID)
+		return ctx.Reply(fmt.Sprintf("You've been added to the group %s.", args[0]))
 	}
 	return nil
 }
@@ -43,13 +36,9 @@ func roleLeaveCmd(ctx CommandCtx) error {
 		err := ctx.Session.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID)
 		if err != nil {
 			return fmt.Errorf("error removing role: %w", err)
-		} else {
-			log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
-			if err := ctx.Reply(fmt.Sprintf("You've been removed from the group %s.", args[0])); err != nil {
-				return err
-			}
-			return nil
 		}
+		log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
+		return ctx.Reply(fmt.Sprintf("You've been removed from the group %s.", args[0]))
 	}
 	return nil
 }

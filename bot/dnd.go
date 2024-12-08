@@ -39,10 +39,7 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	}
 	dateOfPlay, _, err := db.GetLatestPlayDate(currRoleId)
 	if err != nil {
-		if err := ctx.Reply("Could not find play date information. Perhaps wrong server."); err != nil {
-			return err
-		}
-		return fmt.Errorf("error parsing latest playdate %w", err)
+		return ctx.Reply("Could not find play date information. Perhaps wrong server.")
 	}
 	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
 	if dateOfPlay.Before(now) {
