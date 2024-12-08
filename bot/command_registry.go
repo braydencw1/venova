@@ -72,7 +72,7 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 	// Found mcCmd and executing
 	go func() {
 		if err := command.fn(ctx); err != nil {
-			if err := ctx.Reply("Your command failed, perhaps there isn't enough arguments."); err != nil {
+			if err := ctx.Reply(fmt.Sprintf("error: %s", err)); err != nil {
 				log.Printf("Handle MSGs err: %s", err)
 			}
 		}

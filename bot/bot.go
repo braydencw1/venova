@@ -35,9 +35,7 @@ func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreat
 	if msg.Author.ID == discord.State.User.ID {
 		return
 	}
-	if msg.Author.ID != discord.State.User.ID {
-		log.Printf("%s: %s", msg.Author.Username, msg.Content)
-	}
+	log.Printf("%s: %s", msg.Author.Username, msg.Content)
 
 	if msg.Content == fmt.Sprintf("<@%v>", venovaId) {
 		_, err := discord.ChannelMessageSend(msg.ChannelID, strings.ReplaceAll(db.DndMsgResponse(), "{nick}", msg.Author.Username))

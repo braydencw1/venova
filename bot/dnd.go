@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"log"
 	"time"
 	"venova/db"
 )
@@ -19,10 +18,7 @@ func playCmd(ctx CommandCtx) error {
 		}
 		currRoleId := getMemberDNDRole(msg.Member)
 		if currRoleId == "" {
-			log.Printf("Role not found.")
-			if err := ctx.Reply("Your dnd role is not found in the db."); err != nil {
-				return err
-			}
+			return ctx.Reply("Your dnd role is not found in the db.")
 		}
 		if err := db.InsertPlayDate(t, currRoleId); err != nil {
 			return fmt.Errorf("error inserting into table %w", err)
@@ -39,7 +35,7 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	now := time.Now()
 	currRoleId := getMemberDNDRole(msg.Member)
 	if currRoleId == "" {
-		log.Printf("Could not find Dnd Role")
+		return ctx.Reply("Could not find DND role")
 	}
 	dateOfPlay, _, err := db.GetLatestPlayDate(currRoleId)
 	if err != nil {
