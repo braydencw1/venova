@@ -7,7 +7,10 @@ import (
 )
 
 func sendChannelMsg(discord *discordgo.Session, channelId, msg string) {
-	discord.ChannelMessageSend(channelId, msg)
+	_, err := discord.ChannelMessageSend(channelId, msg)
+	if err != nil {
+		log.Printf("err msgsend sendChannelMsg %s", err)
+	}
 }
 
 func dmUser(discord *discordgo.Session, userId, msg string) {
@@ -16,5 +19,8 @@ func dmUser(discord *discordgo.Session, userId, msg string) {
 		log.Println("Error: ", err)
 		return
 	}
-	discord.ChannelMessageSend(dmChannel.ID, msg)
+	_, err = discord.ChannelMessageSend(dmChannel.ID, msg)
+	if err != nil {
+		log.Printf("error msg send dmUser %s", err)
+	}
 }
