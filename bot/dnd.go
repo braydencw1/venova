@@ -6,13 +6,13 @@ import (
 	"venova/db"
 )
 
-func playCmd(ctx CommandCtx) error {
+func playDndCmd(ctx CommandCtx) error {
 	msg := ctx.Message
 	args := ctx.Args
 	// Set dnd play date
 	if msg.Author.ID == morthisId {
 		layout := "01-02-2006"
-		t, err := time.Parse(layout, args[1])
+		t, err := time.Parse(layout, args[0])
 		if err != nil {
 			return fmt.Errorf("error parsing date: %w", err)
 		}

@@ -2,12 +2,16 @@ package bot
 
 func InitCommands() *CommandRegistry {
 	cr := NewCommandRegistry()
+	// Disconnect bot from VC
+	cr.Register("dc", dcCmd, 0)
+	// Set DND Date (Admin)
+	cr.Register("dnd", playDndCmd, 1)
 	// Execute minecraft command
 	cr.Register("mc", mcCmd, 1)
 	// Restart Minecraft Server
 	cr.Register("mcr", manageMinecraftCmd, 0)
-	// Set DND Date (Admin)
-	cr.Register("paly", playCmd, 1)
+	// Play Audio Command
+	cr.Register("play", playAudioCmd, 0)
 	// List joinable roles
 	cr.Register("rlist", roleListCmd, 0)
 	// Join role from list

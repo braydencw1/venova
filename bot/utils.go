@@ -30,14 +30,16 @@ func getMemberDNDRole(member *discordgo.Member) string {
 	}
 	return ""
 }
-
-// func getGuildMember(guild *discordgo.Guild, userId string) *discordgo.Member {
-// 	var member *discordgo.Member
-// 	for _, m := range guild.Members {
-// 		if m.User.ID == userId {
-// 			member = m
-// 			break
-// 		}
-// 	}
-// 	return member
-// }
+func getUserVoiceChannel(s *discordgo.Session, gId, uId string) string {
+	guild, err := s.State.Guild(gId)
+	if err != nil {
+		log.Printf("cannot get guild state for voice channel: %s", err)
+		return ""
+	}
+	for _, vs := range guild.VoiceStates {
+		if vs.UserID == uId {
+			return vs.ChannelID
+		}
+	}
+	return ""
+}
