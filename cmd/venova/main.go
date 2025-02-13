@@ -17,7 +17,6 @@ func main() {
 		log.Fatal("Error loading .env file:", err)
 	}
 	token := os.Getenv("TOKEN")
-
 	// Initialize Discord session
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -51,6 +50,6 @@ func main() {
 	discord.AddHandler(bot.AddGriefer)
 
 	go bot.BirthdateCheckRoutine(discord)
-	go bot.PlayDateCheckRoutine(discord)
+	//go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }

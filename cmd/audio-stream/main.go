@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 
 	"github.com/joho/godotenv"
 )
@@ -15,7 +16,25 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	log.Printf("%s", conn)
+	defer conn.Close()
+
+	cmd := exec.Command("ffmpeg",
+		"-f", "dshow", // Capture from DirectShow (Windows)
+		"-i", "audio=CABLE Output (VB-Audio Virtual Cable)", // Adjust device name
+		"-ac", "2", "-ar", "48000", "-b:a", "96k", // Stereo, 48kHz, 96kbps Opus
+		"-c:a", "libopus", // Encode in Opus format
+		"-f", "opus", "udp://"+server, // Stream via UDP
+	)
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalf("Failed to start FFmpeg: %v", err)
+	}
+
+	log.Println("Streaming audio to bot...")
+	err = cmd.Wait() // Blocks and waits for ffmpeg to finish
+	if err != nil {
+		log.Fatalf("FFmpeg error: %v", err)
+	}
 
 }
 
