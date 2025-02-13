@@ -25,46 +25,12 @@ func playAudioCmd(ctx CommandCtx) error {
 			return ctx.Reply("Failed to join voice channel.")
 		}
 
-		//go monitorVoiceActivity(s, gId, vc)
+		go monitorVoiceActivity(s, gId, vc)
 		go StartAudioReceiver(voiceConn)
-		return nil
-		// return ctx.Reply("Venova has entered the chat...")
+		return ctx.Reply("Venova has entered the chat...")
 	}
 	return nil
 }
-
-// func StartAudioReceiver(vc *discordgo.VoiceConnection) {
-// 	port := gatherVars()
-// 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%s", port))
-// 	if err != nil {
-// 		log.Printf("error resolving audio receiver addr: %s", err)
-// 	}
-// 	log.Printf("port here:%s", port)
-// 	log.Printf("addr here:%s", addr)
-// 	con, err := net.ListenUDP("udp", addr)
-// 	if err != nil {
-// 		log.Printf("error listening to audio receiver: %s", err)
-// 		return
-// 	}
-// 	defer con.Close()
-
-// 	buffer := make([]byte, 1200)
-
-// 	for {
-// 		n, _, err := con.ReadFrom(buffer)
-// 		if err != nil {
-// 			log.Printf("Error reading connection stream UDP: %s", err)
-// 			continue
-// 		}
-// 		log.Printf("Received %d bytes", n)
-// 		audioData := buffer[:n]
-// 		vc.Speaking(true)
-// 		vc.OpusSend <- bytes.Clone(audioData)
-// 		vc.Speaking(false)
-
-// 	}
-
-// }
 
 func gatherVars() string {
 	if err := godotenv.Load(); err != nil {
