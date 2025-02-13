@@ -1,0 +1,85 @@
+stages:
+  - lint
+  - build
+  - upload_nexus
+  - release
+
+variables:
+  OUTPUT: "${CI_PROJECT_NAME}-linux-amd64"
+  OUTPUT_WIN: "${CI_PROJECT_NAME}-windows-amd64.exe"
+
+lint:
+  image: "golang:latest"
+  stage: "lint"
+  script:
+    - "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.63.4"
+    - "golangci-lint --version"
+    - "golangci-lint run"
+
+build:
+  image: "golang:latest"
+  stage: build
+  script:
+    - "export GOMODCACHE=$(pwd)/go-mod-cache"
+    - "export GOCACHE=$(pwd)/go-cache"
+    - |
+      GOOS=windows GOARCH=amd64 go build \
+      -ldflags "\
+      -X 'venova.NAME=venova' \
+      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -o ${OUTPUT_WIN} ${SOURCE_FILE}
+    - |
+      GOOS=linux GOARCH=amd64 go build \
+      -ldflags "\
+      -X 'venova.NAME=venova' \
+      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -o ${OUTPUT} ${SOURCE_FILE}
+    - ./${OUTPUT} -v
+  artifacts:
+    paths:
+      - "${OUTPUT}"
+      - "${OUTPUT_WIN}"
+  only:
+    - tags
+
+upload_nexus:
+  image: "golang:latest"
+  stage: upload_nexus
+  script:
+    - "curl -u ${NEXUS_USER}:${NEXUS_PASS} -k --upload-file ${OUTPUT} ${NEXUS_URL}/repository/public/venova/linux/v${CI_COMMIT_TAG}/${OUTPUT}"
+    - "curl -u ${NEXUS_USER}:${NEXUS_PASS} -k --upload-file ${OUTPUT} ${NEXUS_URL}/repository/public/venova/windows/v${CI_COMMIT_TAG}/${OUTPUT}"
+  artifacts:
+    paths:
+      - "${OUTPUT}"
+      - "${OUTPUT_WIN}"
+  only:
+    - tags
+
+
+release_job:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG                 # Run this job when a tag is created
+  artifacts:
+    paths:
+      - "${OUTPUT}"
+      - "${OUTPUT_WIN}"
+  script:
+    - echo "running release_job"
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    description: '$CI_COMMIT_TAG'
+    name: 'Release v$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: "${OUTPUT}"
+          url: "${CI_JOB_URL}/artifacts/file/${OUTPUT}"
+        - name: "${OUTPUT_WIN}"
+          url: "${CI_JOB_URL}/artifacts/file/${OUTPUT_WIN}"
