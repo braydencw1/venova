@@ -1,17 +1,30 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
-	"venova/bot"
-	"venova/db"
+
+	"github.com/braydencw1/venova"
+	"github.com/braydencw1/venova/bot"
+	"github.com/braydencw1/venova/db"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	showVersion := flag.Bool("version", false, "Display version information")
+	showVersionShort := flag.Bool("v", false, "Display version information (short flag)")
+	flag.Parse()
+	if *showVersion || *showVersionShort {
+		ver := venova.GetVersion("venova")
+		// fmt.Println(ver)
+		fmt.Printf("Name:\t\t%s\nVersion:\t%s\nGit revision:\t%s\nGit ref:\t%s\nGO version:\t%s\nBuilt:\t\t%s\nOS/Arch:\t%s/%s\n",
+			ver.Name, ver.Version, ver.Revision, ver.Reference, ver.GoVers, ver.BuiltAt, ver.OS, ver.Arch)
+		os.Exit(0)
+	}
 	// Load environment variables from the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file:", err)

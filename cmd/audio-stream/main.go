@@ -1,16 +1,28 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/exec"
 
+	"github.com/braydencw1/venova"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	showVersion := flag.Bool("version", false, "Display version information")
+	showVersionShort := flag.Bool("v", false, "Display version information (short flag)")
+	flag.Parse()
+	if *showVersion || *showVersionShort {
+		ver := venova.GetVersion("venova-audio")
+		// fmt.Println(ver)
+		fmt.Printf("Name:\t\t%s\nVersion:\t%s\nGit revision:\t%s\nGit ref:\t%s\nGO version:\t%s\nBuilt:\t\t%s\nOS/Arch:\t%s/%s\n",
+			ver.Name, ver.Version, ver.Revision, ver.Reference, ver.GoVers, ver.BuiltAt, ver.OS, ver.Arch)
+		os.Exit(0)
+	}
 	server, ffmpegPath := gatherVars()
 	conn, err := net.Dial("udp", server)
 	if err != nil {
@@ -45,7 +57,7 @@ func main() {
 
 func gatherVars() (string, string) {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
+		log.Printf("Error loading .env file: %s", err)
 	}
 	port := os.Getenv("AUDIO_SERVER_PORT")
 	if port == "" {
@@ -55,7 +67,8 @@ func gatherVars() (string, string) {
 
 	server := os.Getenv("AUDIO_SERVER_IP")
 	if server == "" {
-		log.Fatalf("AUDIO_SERVER_IP not defined. Exiting.")
+		log.Printf("Defaulting AUDIO_SERVER_IP to 127.0.0.1.")
+		server = "127.0.0.1"
 	}
 
 	ffmpegPath := os.Getenv("FFMPEG_PATH")

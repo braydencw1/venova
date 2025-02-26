@@ -5,7 +5,8 @@ import (
 	"log"
 	"strings"
 	"time"
-	"venova/db"
+
+	"github.com/braydencw1/venova/db"
 
 	"github.com/bwmarrin/discordgo"
 )

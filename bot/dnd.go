@@ -3,7 +3,8 @@ package bot
 import (
 	"fmt"
 	"time"
-	"venova/db"
+
+	"github.com/braydencw1/venova/db"
 )
 
 func playDndCmd(ctx CommandCtx) error {

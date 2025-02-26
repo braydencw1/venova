@@ -1,4 +1,4 @@
-module venova
+module github.com/braydencw1/venova
 
 go 1.23.1
 
