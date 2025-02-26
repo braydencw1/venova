@@ -30,42 +30,42 @@ build:
     - |
       GOOS=windows GOARCH=amd64 go build \
       -ldflags "\
-      -X 'venova.NAME=venova' \
-      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
-      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
-      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
-      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -X 'github.com/braydencw1/venova.NAME=venova' \
+      -X 'github.com/braydencw1/venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT_WIN} ${SOURCE_FILE}
 # Audio Windows
     - |
       GOOS=windows GOARCH=amd64 go build \
       -ldflags "\
-      -X 'venova.NAME=venova' \
-      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
-      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
-      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
-      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -X 'github.com/braydencw1/venova.NAME2=venova-audio' \
+      -X 'github.com/braydencw1/venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT_AUDIO_WIN} ${AUDIO_SOURCE_FILE}
 # Linux
     - |
       GOOS=linux GOARCH=amd64 go build \
       -ldflags "\
-      -X 'venova.NAME=venova' \
-      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
-      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
-      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
-      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -X 'github.com/braydencw1/venova.NAME=venova' \
+      -X 'github.com/braydencw1/venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT} ${SOURCE_FILE}
     - ./${OUTPUT} -v
 # Audio Linux
     - |
       GOOS=linux GOARCH=amd64 go build \
       -ldflags "\
-      -X 'venova.NAME=venova' \
-      -X 'venova.VERSION=${CI_COMMIT_TAG}' \
-      -X 'venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
-      -X 'venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
-      -X 'venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
+      -X 'github.com/braydencw1/venova.NAME2=venova-audio' \
+      -X 'github.com/braydencw1/venova.VERSION=${CI_COMMIT_TAG}' \
+      -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
+      -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
+      -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT_AUDIO} ${AUDIO_SOURCE_FILE}
     - ./${OUTPUT_AUDIO} -v
   artifacts:
