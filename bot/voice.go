@@ -38,7 +38,7 @@ func disconnectUserFromVC(session *discordgo.Session, guildID, userID string) er
 		return err
 	}
 
-	log.Printf("User has been disconnected from voice.")
+	log.Printf("User %s has been disconnected from voice.", userID)
 	return nil
 }
 

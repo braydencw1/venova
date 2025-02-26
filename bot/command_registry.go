@@ -40,6 +40,11 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 	parts := strings.SplitN(msg.Content, " ", 2)
 	commandNameWithPrefix := strings.ToLower(parts[0])
 
+	// Make sure message at least has one part (Images)
+	if len(parts) == 0 || len(parts[0]) == 0 {
+		return
+	}
+
 	if commandNameWithPrefix[0] != '!' {
 		return
 	}
