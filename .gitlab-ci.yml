@@ -16,7 +16,7 @@ lint:
   image: "golang:latest"
   stage: "lint"
   script:
-    - "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.63.4"
+    - "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.5"
     - "golangci-lint --version"
     - "golangci-lint run"
 
