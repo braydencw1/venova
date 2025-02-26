@@ -1,7 +1,7 @@
 package venova
 
 import (
-	"os"
+	"log"
 	"runtime"
 )
 
@@ -17,7 +17,8 @@ type VersionInfo struct {
 }
 
 var (
-	NAME      = GetEntryPoint()
+	NAME      = "venova"
+	NAME2     = "venova-stream"
 	VERSION   = "main"
 	REVISION  = "HEAD"
 	REFERENCE = "HEAD"
@@ -28,30 +29,31 @@ var (
 	Version   VersionInfo
 )
 
-func GetVersion(customName ...string) VersionInfo {
-	// Default
-	name := NAME
-
-	if len(customName) > 0 && customName[0] != "" {
-		name = customName[0]
-	}
-
-	Version = VersionInfo{
-		Name:      name,
-		Version:   VERSION,
-		Revision:  REVISION,
-		Reference: REFERENCE,
-		GoVers:    GoVers,
-		BuiltAt:   BUILT,
-		OS:        OS,
-		Arch:      Arch,
+func GetVersion(customName string) VersionInfo {
+	if customName == "venova" {
+		Version = VersionInfo{
+			Name:      NAME,
+			Version:   VERSION,
+			Revision:  REVISION,
+			Reference: REFERENCE,
+			GoVers:    GoVers,
+			BuiltAt:   BUILT,
+			OS:        OS,
+			Arch:      Arch,
+		}
+	} else if customName == "venova-audio" {
+		Version = VersionInfo{
+			Name:      NAME2,
+			Version:   VERSION,
+			Revision:  REVISION,
+			Reference: REFERENCE,
+			GoVers:    GoVers,
+			BuiltAt:   BUILT,
+			OS:        OS,
+			Arch:      Arch,
+		}
+	} else {
+		log.Fatalf("error gathering version, exiting")
 	}
 	return Version
-}
-
-func GetEntryPoint() string {
-	if entry := os.Getenv("ENTRYPOINT"); entry != "" {
-		return entry
-	}
-	return "Venova"
 }
