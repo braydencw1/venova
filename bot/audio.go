@@ -62,11 +62,21 @@ func StartAudioReceiver(vc *discordgo.VoiceConnection) {
 	}
 
 	buffer := make([]byte, 4000)
-	vc.Speaking(true)
+	err = vc.Speaking(true)
+	if err != nil {
+		log.Printf("Error to speak: %s", err)
+	}
 	wg.Add(1)
 	defer func() {
-		vc.Speaking(false)
-		vc.Disconnect()
+		err := vc.Speaking(false)
+		if err != nil {
+			log.Printf("Unable to defer vc speak false: %s", err)
+		}
+		err = vc.Disconnect()
+		if err != nil {
+			log.Printf("Unable to close vc speak: %s", err)
+		}
+
 		conn.Close()
 		log.Printf("Audio Receiver Stopped.")
 		wg.Done()
