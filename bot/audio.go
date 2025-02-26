@@ -10,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var stopAudioReceiver = make(chan bool)
+
 func playAudioCmd(ctx CommandCtx) error {
 	if ctx.Message.Author.ID == morthisId {
 		gId := ctx.Message.GuildID
@@ -61,20 +63,27 @@ func StartAudioReceiver(vc *discordgo.VoiceConnection) {
 	defer vc.Speaking(false)
 
 	for {
-		n, _, err := conn.ReadFrom(buffer)
-		if err != nil {
-			log.Printf("Error reading UDP: %v", err)
-			continue
-		}
-		// Ensure packet is large enough to contain RTP header
-		if n <= 12 {
-			continue
+		select {
+		case <-stopAudioReceiver:
+			log.Printf("Stopping audio receiver")
+			return
+		default:
+			n, _, err := conn.ReadFrom(buffer)
+			if err != nil {
+				log.Printf("Error reading UDP: %v", err)
+				continue
+			}
+			// Ensure packet is large enough to contain RTP header
+			if n <= 12 {
+				continue
+			}
+
+			// Strip the RTP header (first 12 bytes)
+			opusFrame := make([]byte, n-12)
+			copy(opusFrame, buffer[12:n])
+			vc.OpusSend <- opusFrame
 		}
 
-		// Strip the RTP header (first 12 bytes)
-		opusFrame := make([]byte, n-12)
-		copy(opusFrame, buffer[12:n])
-		vc.OpusSend <- opusFrame
 	}
 }
 
