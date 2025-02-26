@@ -5,12 +5,16 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
-var stopAudioReceiver = make(chan bool)
+var (
+	stopAudioReceiver = make(chan bool, 1)
+	wg                sync.WaitGroup
+)
 
 func playAudioCmd(ctx CommandCtx) error {
 	if ctx.Message.Author.ID == morthisId {
@@ -56,16 +60,21 @@ func StartAudioReceiver(vc *discordgo.VoiceConnection) {
 	if err != nil {
 		log.Fatalf("Error listening on UDP: %v", err)
 	}
-	defer conn.Close()
 
 	buffer := make([]byte, 4000)
 	vc.Speaking(true)
-	defer vc.Speaking(false)
+	wg.Add(1)
+	defer func() {
+		vc.Speaking(false)
+		vc.Disconnect()
+		conn.Close()
+		log.Printf("Audio Receiver Stopped.")
+		wg.Done()
+	}()
 
 	for {
 		select {
 		case <-stopAudioReceiver:
-			log.Printf("Stopping audio receiver")
 			return
 		default:
 			n, _, err := conn.ReadFrom(buffer)
@@ -85,6 +94,10 @@ func StartAudioReceiver(vc *discordgo.VoiceConnection) {
 		}
 
 	}
+}
+
+func stopAudio() {
+	stopAudioReceiver <- true
 }
 
 //ffmpeg -f dshow -i audio="CABLE Output (VB-Audio Virtual Cable)" -ac 2 -ar 48000 -c:a libopus -b:a 64k -frame_size 960 -f rtp rtp://<ip>:<port>

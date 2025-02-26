@@ -11,13 +11,17 @@ import (
 func dcCmd(ctx CommandCtx) error {
 	if ctx.Message.Author.ID == morthisId {
 		var uId string
-		log.Printf("%s", ctx.Args)
+
 		if len(ctx.Args) < 1 {
 			uId = venovaId
 		} else {
 			uId = strings.Trim(ctx.Args[0], "<@>")
 		}
-		log.Printf("%s", uId)
+
+		if uId == venovaId {
+			stopAudio()
+			time.Sleep(500 * time.Millisecond)
+		}
 		err := disconnectUserFromVC(ctx.Session, ctx.Message.GuildID, uId)
 		if err != nil {
 			return ctx.Reply("Error disconnecting from voice channel.")
