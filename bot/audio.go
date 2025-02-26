@@ -99,5 +99,3 @@ func StartAudioReceiver(vc *discordgo.VoiceConnection) {
 func stopAudio() {
 	stopAudioReceiver <- true
 }
-
-//ffmpeg -f dshow -i audio="CABLE Output (VB-Audio Virtual Cable)" -ac 2 -ar 48000 -c:a libopus -b:a 64k -frame_size 960 -f rtp rtp://<ip>:<port>
