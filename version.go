@@ -1,6 +1,7 @@
 package venova
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 )
@@ -16,44 +17,37 @@ type VersionInfo struct {
 	Arch      string
 }
 
-var (
-	NAME      = "venova"
-	NAME2     = "venova-stream"
-	VERSION   = "main"
-	REVISION  = "HEAD"
-	REFERENCE = "HEAD"
-	GoVers    = runtime.Version()
-	BUILT     = "now"
-	OS        = runtime.GOOS
-	Arch      = runtime.GOARCH
-	Version   VersionInfo
-)
+func GetVersionInfo(names ...string) VersionInfo {
+	if len(names) == 0 {
+		log.Fatalf("no name provided, exiting")
+	}
 
-func GetVersion(customName string) VersionInfo {
-	if customName == "venova" {
-		Version = VersionInfo{
-			Name:      NAME,
-			Version:   VERSION,
-			Revision:  REVISION,
-			Reference: REFERENCE,
-			GoVers:    GoVers,
-			BuiltAt:   BUILT,
-			OS:        OS,
-			Arch:      Arch,
-		}
-	} else if customName == "venova-audio" {
-		Version = VersionInfo{
-			Name:      NAME2,
-			Version:   VERSION,
-			Revision:  REVISION,
-			Reference: REFERENCE,
-			GoVers:    GoVers,
-			BuiltAt:   BUILT,
-			OS:        OS,
-			Arch:      Arch,
-		}
-	} else {
+	// Default to the first name in the variadic input
+	name := names[0]
+	switch name {
+	case "venova":
+		name = "venova"
+	case "venova-audio-stream":
+		name = "venova-audio-stream"
+	default:
 		log.Fatalf("error gathering version, exiting")
 	}
-	return Version
+
+	return VersionInfo{
+		Name:      name,
+		Version:   "main",
+		Revision:  "HEAD",
+		Reference: "HEAD",
+		GoVers:    runtime.Version(),
+		BuiltAt:   "now",
+		OS:        runtime.GOOS,
+		Arch:      runtime.GOARCH,
+	}
+}
+
+func (v VersionInfo) String() string {
+	return fmt.Sprintf(
+		"Name:      %s\nVersion:   %s\nRevision:  %s\nReference: %s\nGo Version: %s\nBuilt At:  %s\nOS:        %s\nArchitecture: %s\n",
+		v.Name, v.Version, v.Revision, v.Reference, v.GoVers, v.BuiltAt, v.OS, v.Arch,
+	)
 }

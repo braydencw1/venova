@@ -1,8 +1,9 @@
 module github.com/braydencw1/venova
 
-go 1.24.0
+go 1.24.1
 
 require (
+	github.com/alecthomas/kong v1.9.0
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/gorcon/rcon v1.3.4
 	github.com/joho/godotenv v1.5.1

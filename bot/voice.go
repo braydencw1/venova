@@ -8,6 +8,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var activeReceiver *AudioReceiver
+
+func dcBot() {
+	if activeReceiver != nil {
+		activeReceiver.Stop()
+		activeReceiver = nil
+	}
+}
+
 func dcCmd(ctx CommandCtx) error {
 	if ctx.Message.Author.ID == morthisId {
 		var uId string
@@ -19,8 +28,8 @@ func dcCmd(ctx CommandCtx) error {
 		}
 
 		if uId == venovaId {
-			stopAudio()
-			time.Sleep(500 * time.Millisecond)
+			log.Printf("Executing DCBOT")
+			dcBot()
 		}
 		err := disconnectUserFromVC(ctx.Session, ctx.Message.GuildID, uId)
 		if err != nil {

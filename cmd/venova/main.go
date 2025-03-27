@@ -1,11 +1,11 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/alecthomas/kong"
 	"github.com/braydencw1/venova"
 	"github.com/braydencw1/venova/bot"
 	"github.com/braydencw1/venova/db"
@@ -14,15 +14,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var cli struct {
+	Version bool `help:"Show version" short:"v"`
+}
+
 func main() {
-	showVersion := flag.Bool("version", false, "Display version information")
-	showVersionShort := flag.Bool("v", false, "Display version information (short flag)")
-	flag.Parse()
-	if *showVersion || *showVersionShort {
-		ver := venova.GetVersion("venova")
-		// fmt.Println(ver)
-		fmt.Printf("Name:\t\t%s\nVersion:\t%s\nGit revision:\t%s\nGit ref:\t%s\nGO version:\t%s\nBuilt:\t\t%s\nOS/Arch:\t%s/%s\n",
-			ver.Name, ver.Version, ver.Revision, ver.Reference, ver.GoVers, ver.BuiltAt, ver.OS, ver.Arch)
+	kong.Parse(&cli)
+	if cli.Version {
+		fmt.Println(venova.GetVersionInfo("venova"))
 		os.Exit(0)
 	}
 	// Load environment variables from the .env file
@@ -63,6 +62,6 @@ func main() {
 	discord.AddHandler(bot.AddGriefer)
 
 	go bot.BirthdateCheckRoutine(discord)
-	//go bot.PlayDateCheckRoutine(discord)
+	go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely
 }
