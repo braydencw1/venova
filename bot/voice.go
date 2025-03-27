@@ -57,7 +57,6 @@ func disconnectUserFromVC(session *discordgo.Session, guildID, userID string) er
 
 func monitorVoiceActivity(session *discordgo.Session, guildID, channelID string) {
 	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
 
 	for range ticker.C {
 		guild, err := session.State.Guild(guildID)
