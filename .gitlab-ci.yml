@@ -36,7 +36,6 @@ build:
       -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
-      -linkmode external \
       -extldflags="-static" \
       -o ${OUTPUT_WIN} ${SOURCE_FILE}
 # Audio Windows
@@ -48,7 +47,6 @@ build:
       -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
-      -linkmode external \
       -extldflags="-static" \
       -o ${OUTPUT_AUDIO_WIN} ${AUDIO_SOURCE_FILE}
 # Linux
@@ -60,7 +58,6 @@ build:
       -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
-      -linkmode external \
       -extldflags="-static" \
       -o ${OUTPUT} ${SOURCE_FILE}
     - ./${OUTPUT} -v
@@ -73,7 +70,6 @@ build:
       -X 'github.com/braydencw1/venova.REVISION=${CI_COMMIT_SHORT_SHA}' \
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
-      -linkmode external \
       -extldflags="-static" \
       -o ${OUTPUT_AUDIO} ${AUDIO_SOURCE_FILE}
     - ./${OUTPUT_AUDIO} -v
