@@ -39,7 +39,7 @@ func main() {
 		"-b:a", "64k",
 		"-frame_size", "960",
 		"-f", "rtp",
-		"rtp:"+server, // Dynamically append server IP and port
+		"rtp:"+server,
 	)
 
 	err = cmd.Start()
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	log.Println("Streaming audio to bot...")
-	err = cmd.Wait() // Blocks and waits for ffmpeg to finish
+	err = cmd.Wait()
 	if err != nil {
 		log.Fatalf("FFmpeg error: %v", err)
 	}
