@@ -2,7 +2,6 @@ package venova
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 )
 
@@ -17,32 +16,20 @@ type VersionInfo struct {
 	Arch      string
 }
 
-func GetVersionInfo(names ...string) VersionInfo {
-	if len(names) == 0 {
-		log.Fatalf("no name provided, exiting")
+func GetVersionInfo(CustomName string) (VersionInfo, error) {
+	if CustomName == "" {
+		return VersionInfo{}, fmt.Errorf("no name provided, exiting")
 	}
-
-	// Default to the first name in the variadic input
-	name := names[0]
-	switch name {
-	case "venova":
-		name = "venova"
-	case "venova-audio-stream":
-		name = "venova-audio-stream"
-	default:
-		log.Fatalf("error gathering version, exiting")
-	}
-
 	return VersionInfo{
-		Name:      name,
-		Version:   "main",
-		Revision:  "HEAD",
-		Reference: "HEAD",
-		GoVers:    runtime.Version(),
-		BuiltAt:   "now",
-		OS:        runtime.GOOS,
-		Arch:      runtime.GOARCH,
-	}
+		Name:      CustomName,
+		Version:   VERSION,
+		Revision:  REVISION,
+		Reference: REFERENCE,
+		GoVers:    GoVers,
+		BuiltAt:   BUILT,
+		OS:        OS,
+		Arch:      Arch,
+	}, nil
 }
 
 func (v VersionInfo) String() string {
@@ -51,3 +38,15 @@ func (v VersionInfo) String() string {
 		v.Name, v.Version, v.Revision, v.Reference, v.GoVers, v.BuiltAt, v.OS, v.Arch,
 	)
 }
+
+var (
+	NAME      = "venova"
+	VERSION   = "main"
+	REVISION  = "HEAD"
+	REFERENCE = "HEAD"
+	GoVers    = runtime.Version()
+	BUILT     = "now"
+	OS        = runtime.GOOS
+	Arch      = runtime.GOARCH
+	Version   VersionInfo
+)

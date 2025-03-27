@@ -20,7 +20,11 @@ var cli struct {
 func main() {
 	kong.Parse(&cli)
 	if cli.Version {
-		fmt.Println(venova.GetVersionInfo("venova-audio-stream"))
+		ver, err := venova.GetVersionInfo("venova-audio-stream")
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+		fmt.Println(ver)
 		os.Exit(0)
 	}
 	server, ffmpegPath := gatherVars()
