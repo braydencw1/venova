@@ -10,7 +10,7 @@ import (
 
 var activeReceiver *AudioReceiver
 
-func dcBot() {
+func stopActiveReceiver() {
 	if activeReceiver != nil {
 		activeReceiver.Stop()
 		activeReceiver = nil
@@ -28,8 +28,7 @@ func dcCmd(ctx CommandCtx) error {
 		}
 
 		if uId == venovaId {
-			log.Printf("Executing DCBOT")
-			dcBot()
+			stopActiveReceiver()
 		}
 		err := disconnectUserFromVC(ctx.Session, ctx.Message.GuildID, uId)
 		if err != nil {
