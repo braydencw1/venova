@@ -37,6 +37,8 @@ build:
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT_WIN} ${SOURCE_FILE}
+    - ls -la
+    - echo ${OUTPUT_WIN}
 # Audio Windows
     - |
       GOOS=windows GOARCH=amd64 go build \
@@ -75,8 +77,8 @@ build:
       - "${OUTPUT_WIN}"
       - "${OUTPUT_AUDIO}"
       - "${OUTPUT_AUDIO_WIN}"
-  only:
-    - tags
+  # only:
+  #   - tags
 
 upload_nexus:
   image: "golang:latest"
