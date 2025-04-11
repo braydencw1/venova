@@ -18,40 +18,29 @@ func stopActiveReceiver() {
 }
 
 func dcCmd(ctx CommandCtx) error {
-	if ctx.Message.Author.ID == morthisId {
-		var uId string
-
-		if len(ctx.Args) < 1 {
-			uId = venovaId
-		} else {
-			uId = strings.Trim(ctx.Args[0], "<@>")
-		}
-
-		if uId == venovaId {
-			stopActiveReceiver()
-		}
-		err := disconnectUserFromVC(ctx.Session, ctx.Message.GuildID, uId)
-		if err != nil {
-			return ctx.Reply("Error disconnecting from voice channel.")
-		}
-		if uId == venovaId {
-			return ctx.Reply("Disconnected Venova from the server.")
-		} else {
-			return ctx.Reply("Disconnected user from voice channel.")
-		}
+	if ctx.Message.Author.ID != morthisId {
+		return ctx.Reply("Cannot use this cmd.")
 	}
-	return ctx.Reply("stinky")
-}
 
-func disconnectUserFromVC(session *discordgo.Session, guildID, userID string) error {
-	err := session.GuildMemberMove(guildID, userID, nil)
+	var uId string
+	if len(ctx.Args) < 1 {
+		uId = venovaId
+	} else {
+		uId = strings.Trim(ctx.Args[0], "<@>")
+	}
+
+	if uId == venovaId {
+		stopActiveReceiver()
+	}
+	err := ctx.Session.GuildMemberMove(ctx.Message.GuildID, uId, nil)
 	if err != nil {
-		log.Printf("Failed to disconnect user %s from VC: %v", userID, err)
-		return err
+		return ctx.Reply("Error disconnecting from voice channel.")
 	}
 
-	log.Printf("User %s has been disconnected from voice.", userID)
-	return nil
+	if uId == venovaId {
+		return ctx.Reply("Disconnected Venova from the server.")
+	}
+	return ctx.Reply("Disconnected user from voice channel.")
 }
 
 func monitorVoiceActivity(session *discordgo.Session, guildID, channelID string) {
@@ -70,17 +59,17 @@ func monitorVoiceActivity(session *discordgo.Session, guildID, channelID string)
 				userCount++
 			}
 		}
-
-		if userCount == 1 {
-			log.Println("Bot is alone in VC, disconnecting...")
-			err := LeaveVoiceChannel(session, guildID)
-			if err != nil {
-				log.Printf("Error disconnecting bot: %v", err)
-			}
+		if userCount != 1 {
 			return
+		}
+		log.Println("Bot is alone in VC, disconnecting...")
+		err = LeaveVoiceChannel(session, guildID)
+		if err != nil {
+			log.Printf("Error disconnecting bot: %v", err)
 		}
 	}
 }
+
 func LeaveVoiceChannel(session *discordgo.Session, guildID string) error {
 	voiceConn, exists := session.VoiceConnections[guildID]
 	if !exists {

@@ -4,17 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
+	"github.com/subosito/gotenv"
 )
 
+func init() {
+	if err := gotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+}
+
 type AudioReceiver struct {
-	StopChan chan bool
-	Wg       sync.WaitGroup
-	Vc       *discordgo.VoiceConnection
-	Conn     *net.UDPConn
+	done chan struct{}
+	vc   *discordgo.VoiceConnection
+	conn *net.UDPConn
 }
 
 func playAudioCmd(ctx CommandCtx) error {
@@ -31,55 +36,63 @@ func playAudioCmd(ctx CommandCtx) error {
 			log.Printf("Error joining VC to play audio: %s", err)
 			return ctx.Reply("Failed to join voice channel.")
 		}
-		ar := NewAudioReceiver(voiceConn)
+		port := getAudioServerPort()
+		if err := ensureValidPort(port); err != nil {
+			log.Fatalf("%s", err)
+		}
+		ar, err := NewAudioReceiver(voiceConn, port)
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
 		activeReceiver = ar
 		go monitorVoiceActivity(s, gId, vc)
-		go ar.Start()
+
+		go ar.Run()
 		return ctx.Reply("Venova has entered the chat...")
 	}
 	return nil
 }
 
-func NewAudioReceiver(vc *discordgo.VoiceConnection) *AudioReceiver {
-	return &AudioReceiver{
-		StopChan: make(chan bool, 1),
-		Vc:       vc,
+func ensureValidPort(port string) error {
+	p, err := strconv.Atoi(port)
+	if err != nil || p < 1 || p > 65535 {
+		return fmt.Errorf("invalid port: %s", port)
 	}
+	return nil
 }
 
-func gatherVars() string {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
+func NewAudioReceiver(vc *discordgo.VoiceConnection, port string) (*AudioReceiver, error) {
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		return nil, fmt.Errorf("Error resolving UDP address: %w", err)
 	}
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("Error listening on UDP: %w", err)
+	}
+	if err := vc.Speaking(true); err != nil {
+		return nil, fmt.Errorf("Error to speak: %w", err)
+	}
+	return &AudioReceiver{
+		done: make(chan struct{}),
+		vc:   vc,
+		conn: conn,
+	}, nil
+}
+
+func getAudioServerPort() string {
 	return GetEnvOrDefault("AUDIO_SERVER_PORT", "5005")
 }
 
-func (ar *AudioReceiver) Start() {
-	port := gatherVars()
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%s", port))
-	if err != nil {
-		log.Fatalf("Error resolving UDP address: %v", err)
-	}
-	ar.Conn, err = net.ListenUDP("udp", addr)
-	if err != nil {
-		log.Fatalf("Error listening on UDP: %v", err)
-	}
+func (ar *AudioReceiver) Run() {
 	buffer := make([]byte, 4000)
-	err = ar.Vc.Speaking(true)
-	if err != nil {
-		log.Printf("Error to speak: %s", err)
-	}
-	ar.Wg.Add(1)
-	defer func() {
-		ar.Cleanup()
-	}()
-
+	defer ar.Cleanup()
 	for {
 		select {
-		case <-ar.StopChan:
+		case <-ar.done:
 			return
 		default:
-			n, _, err := ar.Conn.ReadFrom(buffer)
+			n, _, err := ar.conn.ReadFrom(buffer)
 			if err != nil {
 				log.Printf("Error reading UDP: %v", err)
 				continue
@@ -90,35 +103,26 @@ func (ar *AudioReceiver) Start() {
 
 			opusFrame := make([]byte, n-12)
 			copy(opusFrame, buffer[12:n])
-			ar.Vc.OpusSend <- opusFrame
+			ar.vc.OpusSend <- opusFrame
 		}
 
 	}
 }
 
 func (ar *AudioReceiver) Cleanup() {
-	err := ar.Vc.Speaking(false)
+	err := ar.vc.Speaking(false)
 	if err != nil {
 		log.Printf("Unable to defer vc speak false: %s", err)
 	}
-	if err := ar.Vc.Disconnect(); err != nil {
+	if err := ar.vc.Disconnect(); err != nil {
 		log.Printf("Unable to close vc speak: %s", err)
 	}
-	if ar.Conn != nil {
-		log.Printf("Closing")
-		ar.Conn.Close()
-		ar.Conn = nil
+	if ar.conn != nil {
+		ar.conn.Close()
 	}
-	activeReceiver = nil
-	log.Printf("Audio Receiver Stopped.")
-	ar.Wg.Done()
+	log.Println("Audio Receiver stopped.")
 }
 
 func (ar *AudioReceiver) Stop() {
-	select {
-	case ar.StopChan <- true:
-	default:
-		log.Printf("Stopping of Audio Receiver already in progress.")
-	}
-	ar.Wg.Wait()
+	close(ar.done)
 }
