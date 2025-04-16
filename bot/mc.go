@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 	"time"
-	"venova/sshcmd"
+
+	"github.com/braydencw1/venova/sshcmd"
 
 	"github.com/gorcon/rcon"
 )

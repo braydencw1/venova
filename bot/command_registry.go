@@ -38,13 +38,18 @@ func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error
 
 func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.MessageCreate) {
 	parts := strings.SplitN(msg.Content, " ", 2)
+
+	if len(parts) == 0 || len(parts[0]) == 0 {
+		return
+	}
+
 	commandNameWithPrefix := strings.ToLower(parts[0])
 
 	if commandNameWithPrefix[0] != '!' {
 		return
 	}
 	commandName := commandNameWithPrefix[1:]
-	// Finding command name
+
 	command := c.commands[commandName]
 
 	if command == nil {
@@ -69,7 +74,7 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 		Message: msg,
 		Args:    args,
 	}
-	// Found mcCmd and executing
+
 	go func() {
 		if err := command.fn(ctx); err != nil {
 			if err := ctx.Reply(fmt.Sprintf("error: %s", err)); err != nil {

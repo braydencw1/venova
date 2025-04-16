@@ -4,20 +4,35 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"venova/bot"
-	"venova/db"
+
+	"github.com/alecthomas/kong"
+	"github.com/braydencw1/venova"
+	"github.com/braydencw1/venova/bot"
+	"github.com/braydencw1/venova/db"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
+var cli struct {
+	Version bool `help:"Show version" short:"v"`
+}
+
 func main() {
+	kong.Parse(&cli)
+	if cli.Version {
+		ver, err := venova.GetVersionInfo("venova")
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+		fmt.Println(ver)
+		os.Exit(0)
+	}
 	// Load environment variables from the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file:", err)
 	}
 	token := os.Getenv("TOKEN")
-
 	// Initialize Discord session
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {

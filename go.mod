@@ -1,11 +1,13 @@
-module venova
+module github.com/braydencw1/venova
 
-go 1.23.1
+go 1.24.1
 
 require (
+	github.com/alecthomas/kong v1.9.0
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/gorcon/rcon v1.3.4
 	github.com/joho/godotenv v1.5.1
+	github.com/subosito/gotenv v1.6.0
 	golang.org/x/crypto v0.16.0
 	gorm.io/driver/postgres v1.5.3
 	gorm.io/gorm v1.25.5
