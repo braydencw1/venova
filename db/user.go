@@ -7,12 +7,27 @@ import (
 )
 
 type User struct {
-	Id           int `gorm:"primaryKey"`
+	ID           int `gorm:"primaryKey"`
 	DiscordId    int `gorm:"column:disc_id"`
 	FirstName    string
 	LastName     string
 	Dob          time.Time
 	BdayResponse string
+}
+
+type AdminUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+
+type McAdminUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+
+type BirthdayReminderUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
 }
 
 func GetBirthdays(dateToCheck time.Time) (map[int]string, error) {

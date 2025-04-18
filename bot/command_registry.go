@@ -9,9 +9,10 @@ import (
 )
 
 type CommandCtx struct {
-	Session *discordgo.Session
-	Message *discordgo.MessageCreate
-	Args    []string
+	Session   *discordgo.Session
+	Message   *discordgo.MessageCreate
+	Args      []string
+	IDChecker IdentityChecker
 }
 
 type Command struct {
@@ -70,9 +71,10 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 		}
 	}
 	ctx := CommandCtx{
-		Session: s,
-		Message: msg,
-		Args:    args,
+		Session:   s,
+		Message:   msg,
+		Args:      args,
+		IDChecker: GetIdentityChecker(),
 	}
 
 	go func() {

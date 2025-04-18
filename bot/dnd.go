@@ -11,22 +11,23 @@ func playDndCmd(ctx CommandCtx) error {
 	msg := ctx.Message
 	args := ctx.Args
 	// Set dnd play date
-	if msg.Author.ID == morthisId {
-		layout := "01-02-2006"
-		t, err := time.Parse(layout, args[0])
-		if err != nil {
-			return fmt.Errorf("error parsing date: %w", err)
-		}
-		currRoleId := getMemberDNDRole(msg.Member)
-		if currRoleId == "" {
-			return ctx.Reply("Your dnd role is not found in the db.")
-		}
-		if err := db.InsertPlayDate(t, currRoleId); err != nil {
-			return fmt.Errorf("error inserting into table %w", err)
-		}
-		if err = ctx.Reply("The Date has been updated."); err != nil {
-			return err
-		}
+	if !ctx.IDChecker.IsAdmin(msg.Author.ID) {
+		return nil
+	}
+	layout := "01-02-2006"
+	t, err := time.Parse(layout, args[0])
+	if err != nil {
+		return fmt.Errorf("error parsing date: %w", err)
+	}
+	currRoleId := getMemberDNDRole(msg.Member)
+	if currRoleId == "" {
+		return ctx.Reply("Your dnd role is not found in the db.")
+	}
+	if err := db.InsertPlayDate(t, currRoleId); err != nil {
+		return fmt.Errorf("error inserting into table %w", err)
+	}
+	if err = ctx.Reply("The Date has been updated."); err != nil {
+		return err
 	}
 	return nil
 }

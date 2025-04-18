@@ -32,7 +32,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 			return err
 		}
 	}
-	if memberHasRole(msg.Member, mcRoleId) || msg.Author.ID == morthisId {
+	if memberHasRole(msg.Member, mcRoleId) || ctx.IDChecker.IsAdmin(msg.Author.ID) {
 		mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")
 		go func() {
 			err := execDockerCompose(action.Command)
@@ -55,19 +55,19 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 
 func mcCmd(ctx CommandCtx) error {
 	m := ctx.Message
-	if m.Author.ID == blueId || m.Author.ID == morthisId {
-		res, err := minecraftCommand(strings.Join(ctx.Args, " "))
-		if err != nil {
-			log.Printf("Err: %s", err)
-			return ctx.Reply("Could not send command, Minecraft might be offline.")
-		}
-		if res == "" {
-			return nil
-		}
-		return ctx.Reply(res)
+	mID := m.Author.ID
+	if !ctx.IDChecker.IsMinecraftAdmin(mID) && !ctx.IDChecker.IsAdmin(mID) {
+		return ctx.Reply("Sorry you're not a Minecraft server admin.")
 	}
-	return ctx.Reply("Sorry you're not a Minecraft server admin.")
-
+	res, err := minecraftCommand(strings.Join(ctx.Args, " "))
+	if err != nil {
+		log.Printf("Err: %s", err)
+		return ctx.Reply("Could not send command, Minecraft might be offline.")
+	}
+	if res == "" {
+		return nil
+	}
+	return ctx.Reply(res)
 }
 
 func execDockerCompose(action string) error {
@@ -120,19 +120,17 @@ func minecraftCommand(command string) (string, error) {
 func whitelistCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	args := ctx.Args
-	if memberHasRole(msg.Member, mcRoleId) || msg.Author.ID == morthisId {
-		log.Printf("Whitelisting, %s ", args[0])
-		res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", args[0]))
-		if err != nil {
-			if err := ctx.Reply("Could not send command, Minecraft might be offline."); err != nil {
-				return err
-			}
-		}
-		if err := ctx.Reply(res); err != nil {
-			return err
-		}
-
+	if !memberHasRole(msg.Member, mcRoleId) && !ctx.IDChecker.IsAdmin(msg.Author.ID) {
+		return nil
 	}
-	return nil
-
+	res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", args[0]))
+	if err != nil {
+		replyErr := ctx.Reply("Could not send command, Minecraft might be offline.")
+		if replyErr != nil {
+			return replyErr
+		}
+		return nil
+	}
+	log.Printf("Whitelisting, %s ", args[0])
+	return ctx.Reply(fmt.Sprintf("Whitelisting Res, %s", res))
 }

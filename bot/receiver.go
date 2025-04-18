@@ -24,7 +24,7 @@ type AudioReceiver struct {
 
 func playAudioCmd(ctx CommandCtx) error {
 	msgAuthorID := ctx.Message.Author.ID
-	if msgAuthorID != morthisId {
+	if !ctx.IDChecker.IsAdmin(msgAuthorID) {
 		return nil
 	}
 	gId := ctx.Message.GuildID

@@ -10,7 +10,7 @@ func setTimerCmd(ctx CommandCtx) error {
 	msgAuthorId := msg.Author.ID
 	sess := ctx.Session
 	args := ctx.Args
-	if msgAuthorId != morthisId && msgAuthorId != bettyId {
+	if !ctx.IDChecker.IsAdmin(msgAuthorId) {
 		return nil
 	}
 	extraParts := strings.SplitN(args[0], " ", 2)

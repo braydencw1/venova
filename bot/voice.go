@@ -18,7 +18,7 @@ func stopActiveReceiver() {
 }
 
 func dcCmd(ctx CommandCtx) error {
-	if ctx.Message.Author.ID != morthisId {
+	if !ctx.IDChecker.IsAdmin(ctx.Message.Author.ID) {
 		return ctx.Reply("Cannot use this cmd.")
 	}
 
