@@ -26,8 +26,7 @@ var minecraftActions = map[string]minecraftAction{
 func manageMinecraftCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	sess := ctx.Session
-	args := ctx.Args
-	action, exists := minecraftActions[args[0]]
+	action, exists := minecraftActions[ctx.Args[0]]
 	if !exists {
 		if err := ctx.Reply("Action is not available."); err != nil {
 			return err

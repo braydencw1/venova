@@ -23,34 +23,35 @@ type AudioReceiver struct {
 }
 
 func playAudioCmd(ctx CommandCtx) error {
-	if ctx.Message.Author.ID == morthisId {
-		gId := ctx.Message.GuildID
-		s := ctx.Session
-		vc := getUserVoiceChannel(s, gId, ctx.Message.Author.ID)
-		if vc == "" {
-			return ctx.Reply("Could not find a voice channel.")
-		}
-
-		voiceConn, err := s.ChannelVoiceJoin(gId, vc, false, true)
-		if err != nil {
-			log.Printf("Error joining VC to play audio: %s", err)
-			return ctx.Reply("Failed to join voice channel.")
-		}
-		port := getAudioServerPort()
-		if err := ensureValidPort(port); err != nil {
-			log.Fatalf("%s", err)
-		}
-		ar, err := NewAudioReceiver(voiceConn, port)
-		if err != nil {
-			log.Fatalf("%s", err)
-		}
-		activeReceiver = ar
-		go monitorVoiceActivity(s, gId, vc)
-
-		go ar.Run()
-		return ctx.Reply("Venova has entered the chat...")
+	msgAuthorID := ctx.Message.Author.ID
+	if msgAuthorID != morthisId {
+		return nil
 	}
-	return nil
+	gId := ctx.Message.GuildID
+	s := ctx.Session
+	vc := getUserVoiceChannel(s, gId, msgAuthorID)
+	if vc == "" {
+		return ctx.Reply("Could not find a voice channel.")
+	}
+
+	voiceConn, err := s.ChannelVoiceJoin(gId, vc, false, true)
+	if err != nil {
+		log.Printf("Error joining VC to play audio: %s", err)
+		return ctx.Reply("Failed to join voice channel.")
+	}
+	port := getAudioServerPort()
+	if err := ensureValidPort(port); err != nil {
+		log.Fatalf("%s", err)
+	}
+	ar, err := NewAudioReceiver(voiceConn, port)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	activeReceiver = ar
+	go monitorVoiceActivity(s, gId, vc)
+
+	go ar.Run()
+	return ctx.Reply("Venova has entered the chat...")
 }
 
 func ensureValidPort(port string) error {
