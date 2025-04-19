@@ -18,7 +18,7 @@ var tcGeneralId string = "209403061205073931"
 var venovaId string = "1163950982259036302"
 
 // var blueId string = "202213189482446851"
-var bangersRoleId string = "1079585245575270480"
+// var bangersRoleId string = "1079585245575270480"
 
 var mcRoleId string = "1183228947874459668"
 
