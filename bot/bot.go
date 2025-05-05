@@ -3,31 +3,30 @@ package bot
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/braydencw1/venova/db"
+	"github.com/joho/godotenv"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-var tcGeneralId string = "209403061205073931"
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found.")
+	}
+	venovaId := os.Getenv("BOT_ID")
+	if venovaId == "" {
+		log.Fatalf("Must provide BOT_ID")
+	}
+}
 
-// var adminID string = "186317976033558528"
-// var bettyId string = "641009995634180096"
-var venovaId string = "1163950982259036302"
+var venovaId string
 
 // var blueId string = "202213189482446851"
-// var bangersRoleId string = "1079585245575270480"
-
-var mcRoleId string = "1183228947874459668"
-
-// var channelId string = "209403061205073931"
-var joinableRolesMap = map[string]string{
-	"apes":     "1250598584534175784",
-	"dorklock": "1282817878244200488",
-	"bangers":  "1079585245575270480",
-}
+var bangersRoleId string = "1079585245575270480"
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())

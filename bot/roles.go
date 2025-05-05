@@ -3,25 +3,41 @@ package bot
 import (
 	"fmt"
 	"log"
-	"maps"
-	"slices"
-	"strings"
+
+	"github.com/braydencw1/venova/db"
 )
 
 func roleListCmd(ctx CommandCtx) error {
-	rolesString := strings.Join(slices.Collect(maps.Keys(joinableRolesMap)), ", ")
-	return ctx.Reply(fmt.Sprintf("Available roles: %s.\n Available commands: !rjoin & !rleave.", rolesString))
+	rolezs, err := db.GetJoinableRoles(ctx.Message.GuildID)
+	if err != nil {
+		ctx.Reply(fmt.Sprintf("%s", err))
+	}
+	res := "Joinable roles include: \n"
+	for _, v := range rolezs {
+		res += v.Nickname + "\n"
+	}
+	ctx.Reply(res)
+
+	return nil
 }
 
 func roleJoinCmd(ctx CommandCtx) error {
+	// Change to compare against roles in the server
 	args := ctx.Args
 	msg := ctx.Message
 	sess := ctx.Session
-	roleID, exists := joinableRolesMap[args[0]]
-
-	if !exists {
-		return nil
+	// roleID, exists := joinableRolesMap[args[0]]
+	var roleIDInt int64
+	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
+	if err != nil {
+		return fmt.Errorf("issue retrieving joinable roles: %s", err)
 	}
+	for _, role := range roles {
+		if args[0] == role.Nickname {
+			roleIDInt = role.RoleID
+		}
+	}
+	roleID := fmt.Sprintf("%d", roleIDInt)
 
 	if err := sess.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID); err != nil {
 		log.Printf("error adding role: %s", err)
@@ -35,10 +51,19 @@ func roleJoinCmd(ctx CommandCtx) error {
 func roleLeaveCmd(ctx CommandCtx) error {
 	args := ctx.Args
 	msg := ctx.Message
-	roleID, exists := joinableRolesMap[args[0]]
-	if !exists {
-		return nil
+
+	var roleIDInt int64
+	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
+	if err != nil {
+		return fmt.Errorf("issue retrieving joinable roles: %s", err)
 	}
+	for _, role := range roles {
+		if args[0] == role.Nickname {
+			roleIDInt = role.RoleID
+		}
+	}
+	roleID := fmt.Sprintf("%d", roleIDInt)
+
 	if err := ctx.Session.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID); err != nil {
 		return fmt.Errorf("error removing role: %w", err)
 	}

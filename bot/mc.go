@@ -32,7 +32,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 			return err
 		}
 	}
-	if memberHasRole(msg.Member, mcRoleId) || ctx.IDChecker.IsAdmin(msg.Author.ID) {
+	if ctx.IDChecker.IsMinecraftAdmin(msg.Author.ID) || ctx.IDChecker.IsAdmin(msg.Author.ID) {
 		mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")
 		go func() {
 			err := execDockerCompose(action.Command)
@@ -120,7 +120,7 @@ func minecraftCommand(command string) (string, error) {
 func whitelistCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	args := ctx.Args
-	if !memberHasRole(msg.Member, mcRoleId) && !ctx.IDChecker.IsAdmin(msg.Author.ID) {
+	if !ctx.IDChecker.IsMinecraftAdmin(msg.Author.ID) && !ctx.IDChecker.IsAdmin(msg.Author.ID) {
 		return nil
 	}
 	res, err := minecraftCommand(fmt.Sprintf("whitelist add %s", args[0]))
