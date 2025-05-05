@@ -1,6 +1,6 @@
 module github.com/braydencw1/venova
 
-go 1.24.1
+go 1.24.2
 
 require (
 	github.com/alecthomas/kong v1.9.0
@@ -20,6 +20,6 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )

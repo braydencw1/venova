@@ -2,20 +2,41 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"time"
 )
 
-type User struct {
-	Id           int `gorm:"primaryKey"`
-	DiscordId    int `gorm:"column:disc_id"`
-	FirstName    string
-	LastName     string
-	Dob          time.Time
-	BdayResponse string
+type BirthdayMsg struct {
+	DiscordId     int
+	BdayResponse  string
+	TextChannelID string
 }
 
-func GetBirthdays(dateToCheck time.Time) (map[int]string, error) {
+type User struct {
+	ID            int `gorm:"primaryKey"`
+	DiscordId     int `gorm:"column:disc_id"`
+	FirstName     string
+	LastName      string
+	Dob           time.Time
+	BdayResponse  string
+	TextChannelID string
+}
+
+type AdminUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+
+type McAdminUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+
+type BirthdayReminderUser struct {
+	UserID int  `gorm:"primaryKey"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+
+func GetBirthdays(dateToCheck time.Time) ([]BirthdayMsg, error) {
 	var users []User
 
 	res := db.Where("EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
@@ -23,11 +44,14 @@ func GetBirthdays(dateToCheck time.Time) (map[int]string, error) {
 		fmt.Println("Error: ", res.Error)
 		return nil, res.Error
 	}
-	bdayMap := make(map[int]string)
-
+	var bdays []BirthdayMsg
 	for _, user := range users {
-		log.Printf("Today's birthdays are: %v", user)
-		bdayMap[user.DiscordId] = user.BdayResponse
+		bdays = append(bdays, BirthdayMsg{
+			DiscordId:     user.DiscordId,
+			BdayResponse:  user.BdayResponse,
+			TextChannelID: user.TextChannelID,
+		})
 	}
-	return bdayMap, nil
+
+	return bdays, nil
 }
