@@ -18,6 +18,7 @@ type CommandCtx struct {
 type Command struct {
 	fn              func(c CommandCtx) error
 	numRequiredArgs int
+	help            string
 }
 
 type CommandRegistry struct {
@@ -30,10 +31,11 @@ func NewCommandRegistry() *CommandRegistry {
 	}
 }
 
-func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int) {
+func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int, help string) {
 	c.commands[name] = &Command{
 		fn:              command,
 		numRequiredArgs: numArgs,
+		help:            help,
 	}
 }
 

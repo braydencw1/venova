@@ -32,9 +32,19 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 }
 
 func helpCmd(ctx CommandCtx) error {
-	commands := InitCommands().ListCommands()
+	a := ctx.Args
 
-	return ctx.Reply(fmt.Sprintf("available commands: %s", commands))
+	commands := InitCommands()
+	if len(a) == 0 {
+		cmdNames := commands.ListCommands()
+		return ctx.Reply(fmt.Sprintf("Available commands: %s", strings.Join(cmdNames, ", ")))
+	}
+
+	cmd, exists := commands.commands[a[0]]
+	if exists {
+		return ctx.Reply(cmd.help)
+	}
+	return ctx.Reply("Unknown command. Use !help to see all available commands.")
 }
 
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
