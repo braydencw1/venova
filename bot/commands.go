@@ -6,6 +6,10 @@ func InitCommands() *CommandRegistry {
 	cr.Register("dc", dcCmd, 0)
 	// Set DND Date (Admin)
 	cr.Register("dnd", playDndCmd, 1)
+	// Execute help command to display available
+	// Commands. Currently list all, even if
+	// unavailable to the user via roles etc.
+	cr.Register("help", helpCmd, 0)
 	// Execute minecraft command
 	cr.Register("mc", mcCmd, 1)
 	// Restart Minecraft Server
@@ -25,4 +29,12 @@ func InitCommands() *CommandRegistry {
 	// Whitelist Minecraft
 	cr.Register("whitelist", whitelistCmd, 1)
 	return cr
+}
+
+func (cr *CommandRegistry) ListCommands() []string {
+	keys := make([]string, 0, len(cr.commands))
+	for k := range cr.commands {
+		keys = append(keys, k)
+	}
+	return keys
 }

@@ -31,6 +31,12 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
 }
 
+func helpCmd(ctx CommandCtx) error {
+	commands := InitCommands().ListCommands()
+
+	return ctx.Reply(fmt.Sprintf("available commands: %s", commands))
+}
+
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
 	if msg.Author.ID == discord.State.User.ID {
 		return
