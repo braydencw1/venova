@@ -9,15 +9,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func memberHasRole(member *discordgo.Member, roleId string) bool {
-	for _, memberRoleId := range member.Roles {
-		if memberRoleId == roleId {
-			return true
-		}
-	}
-	return false
-}
-
 func getMemberDNDRole(member *discordgo.Member) string {
 	res, err := db.GetDndRoles()
 	if err != nil {

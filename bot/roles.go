@@ -8,17 +8,17 @@ import (
 )
 
 func roleListCmd(ctx CommandCtx) error {
-	rolezs, err := db.GetJoinableRoles(ctx.Message.GuildID)
+	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
 	if err != nil {
-		ctx.Reply(fmt.Sprintf("%s", err))
+		return ctx.Reply(fmt.Sprintf("%s", err))
 	}
+
 	res := "Joinable roles include: \n"
-	for _, v := range rolezs {
+
+	for _, v := range roles {
 		res += v.Nickname + "\n"
 	}
-	ctx.Reply(res)
-
-	return nil
+	return ctx.Reply(res)
 }
 
 func roleJoinCmd(ctx CommandCtx) error {
