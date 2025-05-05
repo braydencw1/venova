@@ -25,7 +25,6 @@ func init() {
 
 var venovaId string
 
-// var blueId string = "202213189482446851"
 var bangersRoleId string = "1079585245575270480"
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
