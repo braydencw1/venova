@@ -59,7 +59,7 @@ func roleLeaveCmd(ctx CommandCtx) error {
 		return fmt.Errorf("issue retrieving joinable roles: %s", err)
 	}
 	for _, role := range roles {
-		if args[0] == role.Nickname {
+		if strings.EqualFold(args[0], role.Nickname) {
 			roleIDInt = role.RoleID
 		}
 	}
