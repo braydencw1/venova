@@ -26,3 +26,7 @@ func OpenDatabase(dsn string) error {
 
 	return nil
 }
+
+func GetDB() *gorm.DB {
+	return db
+}
