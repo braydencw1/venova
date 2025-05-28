@@ -39,13 +39,14 @@ func (c *DBIdentityChecker) WantsBirthdayReminder() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	discordIDs := make([]string, 0, len(remindUsers))
+	discordIDs := []string{}
 	for _, r := range remindUsers {
 		discordIDs = append(discordIDs, fmt.Sprint(r.User.DiscordId))
 	}
 	return discordIDs, nil
 }
 
+// Fix this to Merge with Minecraft Admin
 func (c *DBIdentityChecker) IsAdmin(uID string) bool {
 	var user db.User
 	if err := c.DB.First(&user, "disc_id =?", uID).Error; err != nil {
@@ -60,6 +61,7 @@ func (c *DBIdentityChecker) IsAdmin(uID string) bool {
 	return true
 }
 
+// See above comment nerd
 func (c *DBIdentityChecker) IsMinecraftAdmin(uID string) bool {
 	var user db.User
 	if err := c.DB.First(&user, "disc_id =?", uID).Error; err != nil {

@@ -32,7 +32,7 @@ func InitCommands() *CommandRegistry {
 }
 
 func (cr *CommandRegistry) ListCommands() []string {
-	keys := make([]string, 0, len(cr.commands))
+	keys := []string{}
 	for k := range cr.commands {
 		keys = append(keys, k)
 	}
