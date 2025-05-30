@@ -2,11 +2,8 @@ package bot
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/braydencw1/venova/db"
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -23,14 +20,8 @@ type DBIdentityChecker struct {
 var checker IdentityChecker
 
 func GetIdentityChecker() IdentityChecker {
-	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found.")
-	}
-	switch os.Getenv("ID_METHOD") {
-	default:
-		checker = &DBIdentityChecker{DB: db.GetDB()}
-		return checker
-	}
+	checker = &DBIdentityChecker{DB: db.GetDB()}
+	return checker
 }
 
 func (c *DBIdentityChecker) WantsBirthdayReminder() ([]string, error) {

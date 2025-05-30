@@ -21,23 +21,21 @@ func birthdateCheck(discord *discordgo.Session) {
 
 	for _, bdayMsg := range bdayMessages {
 		response := bdayMsg.BdayResponse
-		dID := bdayMsg.DiscordId
-		chanID := bdayMsg.TextChannelID
 		if response == "" {
-			sendChannelMsg(discord, chanID, fmt.Sprintf("Happy Birthday <@%d>", dID))
-		} else {
-			sendChannelMsg(discord, chanID, fmt.Sprintf("%s <@%d>", response, dID))
+			response = fmt.Sprintf("Happy Birthday <@%d>", bdayMsg.DiscordId)
 		}
+		sendChannelMsg(discord, bdayMsg.TextChannelID, response)
 
 		// Reminder users who want individual reminders
 		res, err := GetIdentityChecker().WantsBirthdayReminder()
 
 		if err != nil {
 			log.Printf("Error extracting Birthday Reminder Users %s", err)
+			continue
 		}
 
 		for _, id := range res {
-			dmUser(discord, id, fmt.Sprintf("It's <@%d>'s birthday!", dID))
+			dmUser(discord, id, fmt.Sprintf("It's <@%d>'s birthday!", bdayMsg.DiscordId))
 		}
 	}
 }

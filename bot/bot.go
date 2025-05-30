@@ -32,15 +32,13 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 }
 
 func helpCmd(ctx CommandCtx) error {
-	a := ctx.Args
-
 	commands := InitCommands()
-	if len(a) == 0 {
+	if len(ctx.Args) == 0 {
 		cmdNames := commands.ListCommands()
 		return ctx.Reply(fmt.Sprintf("Available commands: %s", strings.Join(cmdNames, ", ")))
 	}
 
-	cmd, exists := commands.commands[a[0]]
+	cmd, exists := commands.commands[ctx.Args[0]]
 	if exists {
 		return ctx.Reply(cmd.help)
 	}

@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/braydencw1/venova/db"
@@ -38,7 +39,7 @@ func roleJoinCmd(ctx CommandCtx) error {
 			roleIDInt = role.RoleID
 		}
 	}
-	roleID := fmt.Sprintf("%d", roleIDInt)
+	roleID := strconv.Itoa(int(roleIDInt))
 
 	if err := sess.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID); err != nil {
 		log.Printf("error adding role: %s", err)
