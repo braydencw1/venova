@@ -17,7 +17,7 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found.")
 	}
-	venovaId := os.Getenv("BOT_ID")
+	venovaId = os.Getenv("BOT_ID")
 	if venovaId == "" {
 		log.Fatalf("Must provide BOT_ID")
 	}

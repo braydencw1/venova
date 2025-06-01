@@ -49,7 +49,6 @@ func playAudioCmd(ctx CommandCtx) error {
 	}
 	activeReceiver = ar
 	go monitorVoiceActivity(s, gId, vc)
-
 	go ar.Run()
 	return ctx.Reply("Venova has entered the chat...")
 }
@@ -65,14 +64,14 @@ func ensureValidPort(port string) error {
 func NewAudioReceiver(vc *discordgo.VoiceConnection, port string) (*AudioReceiver, error) {
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%s", port))
 	if err != nil {
-		return nil, fmt.Errorf("Error resolving UDP address: %w", err)
+		return nil, fmt.Errorf("error resolving UDP address: %w", err)
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("Error listening on UDP: %w", err)
+		return nil, fmt.Errorf("error listening on UDP: %w", err)
 	}
 	if err := vc.Speaking(true); err != nil {
-		return nil, fmt.Errorf("Error to speak: %w", err)
+		return nil, fmt.Errorf("error to speak: %w", err)
 	}
 	return &AudioReceiver{
 		done: make(chan struct{}),
