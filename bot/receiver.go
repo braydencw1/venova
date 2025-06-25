@@ -23,34 +23,34 @@ type AudioReceiver struct {
 }
 
 func playAudioCmd(ctx CommandCtx) error {
-	if ctx.Message.Author.ID == morthisId {
-		gId := ctx.Message.GuildID
-		s := ctx.Session
-		vc := getUserVoiceChannel(s, gId, ctx.Message.Author.ID)
-		if vc == "" {
-			return ctx.Reply("Could not find a voice channel.")
-		}
-
-		voiceConn, err := s.ChannelVoiceJoin(gId, vc, false, true)
-		if err != nil {
-			log.Printf("Error joining VC to play audio: %s", err)
-			return ctx.Reply("Failed to join voice channel.")
-		}
-		port := getAudioServerPort()
-		if err := ensureValidPort(port); err != nil {
-			log.Fatalf("%s", err)
-		}
-		ar, err := NewAudioReceiver(voiceConn, port)
-		if err != nil {
-			log.Fatalf("%s", err)
-		}
-		activeReceiver = ar
-		go monitorVoiceActivity(s, gId, vc)
-
-		go ar.Run()
-		return ctx.Reply("Venova has entered the chat...")
+	msgAuthorID := ctx.Message.Author.ID
+	if !ctx.IDChecker.IsAdmin(msgAuthorID) {
+		return nil
 	}
-	return nil
+	gId := ctx.Message.GuildID
+	s := ctx.Session
+	vc := getUserVoiceChannel(s, gId, msgAuthorID)
+	if vc == "" {
+		return ctx.Reply("Could not find a voice channel.")
+	}
+
+	voiceConn, err := s.ChannelVoiceJoin(gId, vc, false, true)
+	if err != nil {
+		log.Printf("Error joining VC to play audio: %s", err)
+		return ctx.Reply("Failed to join voice channel.")
+	}
+	port := getAudioServerPort()
+	if err := ensureValidPort(port); err != nil {
+		log.Fatalf("%s", err)
+	}
+	ar, err := NewAudioReceiver(voiceConn, port)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	activeReceiver = ar
+	go monitorVoiceActivity(s, gId, vc)
+	go ar.Run()
+	return ctx.Reply("Venova has entered the chat...")
 }
 
 func ensureValidPort(port string) error {
@@ -64,14 +64,14 @@ func ensureValidPort(port string) error {
 func NewAudioReceiver(vc *discordgo.VoiceConnection, port string) (*AudioReceiver, error) {
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%s", port))
 	if err != nil {
-		return nil, fmt.Errorf("Error resolving UDP address: %w", err)
+		return nil, fmt.Errorf("error resolving UDP address: %w", err)
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("Error listening on UDP: %w", err)
+		return nil, fmt.Errorf("error listening on UDP: %w", err)
 	}
 	if err := vc.Speaking(true); err != nil {
-		return nil, fmt.Errorf("Error to speak: %w", err)
+		return nil, fmt.Errorf("error to speak: %w", err)
 	}
 	return &AudioReceiver{
 		done: make(chan struct{}),

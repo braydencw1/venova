@@ -3,33 +3,46 @@ package bot
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/braydencw1/venova/db"
+	"github.com/joho/godotenv"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-var tcGeneralId string = "209403061205073931"
-
-var morthisId string = "186317976033558528"
-var bettyId string = "641009995634180096"
-var venovaId string = "1163950982259036302"
-var blueId string = "202213189482446851"
-var bangersRoleId string = "1079585245575270480"
-
-var mcRoleId string = "1183228947874459668"
-var channelId string = "209403061205073931"
-var griefers []string = []string{}
-var joinableRolesMap = map[string]string{
-	"apes":     "1250598584534175784",
-	"dorklock": "1282817878244200488",
-	"bangers":  "1079585245575270480",
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found.")
+	}
+	venovaId = os.Getenv("BOT_ID")
+	if venovaId == "" {
+		log.Fatalf("Must provide BOT_ID")
+	}
 }
+
+var venovaId string
+
+var bangersRoleId string = "1079585245575270480"
 
 func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 	log.Printf("Logged in as %s\n", event.User.String())
+}
+
+func helpCmd(ctx CommandCtx) error {
+	commands := InitCommands()
+	if len(ctx.Args) == 0 {
+		cmdNames := commands.ListCommands()
+		return ctx.Reply(fmt.Sprintf("Available commands: %s", strings.Join(cmdNames, ", ")))
+	}
+
+	cmd, exists := commands.commands[ctx.Args[0]]
+	if exists {
+		return ctx.Reply(cmd.help)
+	}
+	return ctx.Reply("Unknown command. Use !help to see all available commands.")
 }
 
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
@@ -57,66 +70,6 @@ func GetUsernameFromID(session *discordgo.Session, userID string) (string, error
 		return "", err
 	}
 	return user.Username, nil
-}
-
-func AddGriefer(discord *discordgo.Session, msg *discordgo.MessageCreate) {
-	parts := strings.Split(msg.Content, " ")
-
-	if parts[0] == "!grief" {
-		if len(msg.Mentions) == 0 {
-			if len(griefers) == 0 {
-				_, err := discord.ChannelMessageSend(msg.ChannelID, "Nobody is getting griefed!")
-				if err != nil {
-					log.Printf("error sending msg addGreifer %s", err)
-				}
-
-				return
-			} else {
-				myGriefees := []string{}
-
-				for _, grief := range griefers {
-					myGriefees = append(myGriefees, fmt.Sprintf("<@%s>", grief))
-				}
-				_, err := discord.ChannelMessageSend(msg.ChannelID, strings.Join(myGriefees, " "))
-				if err != nil {
-					log.Printf("error sending msg addGriefer %s", err)
-				}
-
-				return
-			}
-		}
-
-		for _, mention := range msg.Mentions {
-			griefers = append(griefers, mention.ID)
-		}
-
-		_, err := discord.ChannelMessageSend(msg.ChannelID, "This brotha is getting griefed")
-		if err != nil {
-			log.Printf("error sending msg addGriefer %s", err)
-		}
-
-		return
-	}
-}
-
-func HandleVoiceStateUpdate(discord *discordgo.Session, msg *discordgo.VoiceStateUpdate) {
-	if msg.ChannelID != channelId {
-		return
-	}
-
-	if msg.VoiceState.UserID == morthisId {
-		_, err := discord.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("Hello cutie <@%s>", morthisId))
-		if err != nil {
-			log.Printf("error sending msg HandleVoiceStateUpdate %s", err)
-		}
-	}
-
-	for _, griefee := range griefers {
-		if msg.VoiceState.UserID == griefee {
-			err := discord.GuildMemberMove(msg.GuildID, griefee, &channelId)
-			log.Printf("error moving user, HandleVoiceStateUpdate %s", err)
-		}
-	}
 }
 
 func PlayDateCheckRoutine(discord *discordgo.Session) {

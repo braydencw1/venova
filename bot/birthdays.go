@@ -13,21 +13,30 @@ import (
 func birthdateCheck(discord *discordgo.Session) {
 	nextDay := time.Now()
 
-	birthDateDiscId, err := db.GetBirthdays(nextDay)
+	bdayMessages, err := db.GetBirthdays(nextDay)
 	if err != nil {
 		log.Printf("error fetching birthdates :%s", err)
 		return
 	}
-	for discID, bdres := range birthDateDiscId {
-		log.Printf("Here is %d, %s", discID, bdres)
-		if bdres == "" {
-			sendChannelMsg(discord, tcGeneralId, fmt.Sprintf("Happy Birthday <@%d>", discID))
-		} else {
-			sendChannelMsg(discord, tcGeneralId, fmt.Sprintf("%s <@%d>", bdres, discID))
+
+	for _, bdayMsg := range bdayMessages {
+		response := bdayMsg.BdayResponse
+		if response == "" {
+			response = fmt.Sprintf("Happy Birthday <@%d>", bdayMsg.DiscordId)
+		}
+		sendChannelMsg(discord, bdayMsg.TextChannelID, response)
+
+		// Reminder users who want individual reminders
+		res, err := GetIdentityChecker().WantsBirthdayReminder()
+
+		if err != nil {
+			log.Printf("Error extracting Birthday Reminder Users %s", err)
+			continue
 		}
 
-		dmUser(discord, bettyId, fmt.Sprintf("It's <@%d>'s birthday!", discID))
-
+		for _, id := range res {
+			dmUser(discord, id, fmt.Sprintf("It's <@%d>'s birthday!", bdayMsg.DiscordId))
+		}
 	}
 }
 

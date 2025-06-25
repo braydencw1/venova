@@ -9,14 +9,16 @@ import (
 )
 
 type CommandCtx struct {
-	Session *discordgo.Session
-	Message *discordgo.MessageCreate
-	Args    []string
+	Session   *discordgo.Session
+	Message   *discordgo.MessageCreate
+	Args      []string
+	IDChecker IdentityChecker
 }
 
 type Command struct {
 	fn              func(c CommandCtx) error
 	numRequiredArgs int
+	help            string
 }
 
 type CommandRegistry struct {
@@ -29,10 +31,11 @@ func NewCommandRegistry() *CommandRegistry {
 	}
 }
 
-func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int) {
+func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int, help string) {
 	c.commands[name] = &Command{
 		fn:              command,
 		numRequiredArgs: numArgs,
+		help:            help,
 	}
 }
 
@@ -70,9 +73,10 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 		}
 	}
 	ctx := CommandCtx{
-		Session: s,
-		Message: msg,
-		Args:    args,
+		Session:   s,
+		Message:   msg,
+		Args:      args,
+		IDChecker: GetIdentityChecker(),
 	}
 
 	go func() {

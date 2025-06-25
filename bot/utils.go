@@ -9,15 +9,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func memberHasRole(member *discordgo.Member, roleId string) bool {
-	for _, memberRoleId := range member.Roles {
-		if memberRoleId == roleId {
-			return true
-		}
-	}
-	return false
-}
-
 func getMemberDNDRole(member *discordgo.Member) string {
 	res, err := db.GetDndRoles()
 	if err != nil {
@@ -50,6 +41,7 @@ func GetEnvOrDefault(key, def string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		log.Printf("%s is empty or not defined. Defaulting to: %s", key, def)
+		v = def
 	}
-	return def
+	return v
 }

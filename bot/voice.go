@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -18,7 +19,8 @@ func stopActiveReceiver() {
 }
 
 func dcCmd(ctx CommandCtx) error {
-	if ctx.Message.Author.ID != morthisId {
+	log.Printf("venova ID: %s", venovaId)
+	if !ctx.IDChecker.IsAdmin(ctx.Message.Author.ID) {
 		return ctx.Reply("Cannot use this cmd.")
 	}
 
@@ -34,7 +36,7 @@ func dcCmd(ctx CommandCtx) error {
 	}
 	err := ctx.Session.GuildMemberMove(ctx.Message.GuildID, uId, nil)
 	if err != nil {
-		return ctx.Reply("Error disconnecting from voice channel.")
+		return ctx.Reply(fmt.Sprintf("Error disconnecting from voice channel: %s", err.Error()))
 	}
 
 	if uId == venovaId {
