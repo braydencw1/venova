@@ -92,3 +92,8 @@ func (c *CommandCtx) Reply(s string) error {
 	_, err := c.Session.ChannelMessageSend(c.Message.ChannelID, s)
 	return err
 }
+
+func (c *CommandCtx) DirectReply(s string) error {
+	_, err := c.Session.ChannelMessageSend(c.Message.Author.ID, s)
+	return err
+}
