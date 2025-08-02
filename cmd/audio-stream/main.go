@@ -32,7 +32,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	defer conn.Close()
+
+	defer func() {
+		if cerr := conn.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	cmd := exec.Command(ffmpegPath,
 		"-f", "dshow",
