@@ -42,7 +42,12 @@ func RunCommand(client *ssh.Client, command string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer session.Close()
+
+	defer func() {
+		if cerr := session.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	output, err := session.CombinedOutput(command)
 	if err != nil {

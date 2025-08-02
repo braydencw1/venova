@@ -85,7 +85,9 @@ func roleLeaveCmd(ctx CommandCtx) error {
 func checkRole(ctx CommandCtx, givenRole string) bool {
 	mem, err := ctx.Session.State.Member(ctx.Message.GuildID, ctx.Message.Author.ID)
 	if err != nil {
-		ctx.Reply(fmt.Sprintf("could not find member: %s", err))
+		if replyErr := ctx.Reply(fmt.Sprintf("could not find member: %s", err)); replyErr != nil {
+			log.Printf("failed to reply: %v", replyErr)
+		}
 	}
 
 	found := false

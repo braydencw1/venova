@@ -118,7 +118,9 @@ func (ar *AudioReceiver) Cleanup() {
 		log.Printf("Unable to close vc speak: %s", err)
 	}
 	if ar.conn != nil {
-		ar.conn.Close()
+		if err := ar.conn.Close(); err != nil {
+			log.Printf("Unable to close UDP connection: %v", err)
+		}
 	}
 	log.Println("Audio Receiver stopped.")
 }

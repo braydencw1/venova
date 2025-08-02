@@ -25,7 +25,11 @@ var (
 func main() {
 	handleCommandLine()
 	discord := startDiscordSession()
-	defer discord.Close()
+	defer func() {
+		if err := discord.Close(); err != nil {
+			log.Printf("failed to close Discord session: %v", err)
+		}
+	}()
 
 	discord.AddHandler(bot.OnReady)
 	discord.AddHandler(bot.HandleMessageEvents)
