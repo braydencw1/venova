@@ -90,12 +90,5 @@ func checkRole(ctx CommandCtx, givenRole string) bool {
 		}
 	}
 
-	found := false
-	for _, role := range mem.Roles {
-
-		if role == givenRole {
-			found = true
-		}
-	}
-	return found
+	return slices.Contains(mem.Roles, givenRole)
 }
