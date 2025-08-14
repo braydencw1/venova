@@ -34,8 +34,9 @@ func main() {
 	}
 
 	defer func() {
-		if cerr := conn.Close(); cerr != nil && err == nil {
-			err = cerr
+		err = conn.Close()
+		if err != nil {
+			log.Fatalf("could not close audio connection: %s", err)
 		}
 	}()
 
