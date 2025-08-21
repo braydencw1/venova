@@ -100,6 +100,7 @@ func checkRole(ctx CommandCtx, givenRole string) (bool, error) {
 		if replyErr := ctx.Reply(fmt.Sprintf("could not find member: %s", err)); replyErr != nil {
 			return false, replyErr
 		}
+		return false, err
 	}
 
 	return slices.Contains(mem.Roles, givenRole), nil
