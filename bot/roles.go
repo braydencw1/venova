@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -42,12 +41,13 @@ func roleJoinCmd(ctx CommandCtx) error {
 	}
 	roleID := strconv.Itoa(int(roleIDInt))
 
-	roleCheck, err := checkRole(ctx, roleID)
+	hasRole, err := ctx.HasDiscordRole(roleID)
+
 	if err != nil {
 		return err
 	}
 
-	if roleCheck {
+	if hasRole {
 		return nil
 	}
 
@@ -76,13 +76,13 @@ func roleLeaveCmd(ctx CommandCtx) error {
 	}
 	roleID := fmt.Sprintf("%d", roleIDInt)
 
-	roleCheck, err := checkRole(ctx, roleID)
+	hasRole, err := ctx.HasDiscordRole(roleID)
 
 	if err != nil {
 		return err
 	}
 
-	if !roleCheck {
+	if !hasRole {
 		return nil
 	}
 
@@ -92,16 +92,4 @@ func roleLeaveCmd(ctx CommandCtx) error {
 
 	log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)
 	return ctx.Reply(fmt.Sprintf("You've been removed from the group %s.", args[0]))
-}
-
-func checkRole(ctx CommandCtx, givenRole string) (bool, error) {
-	mem, err := ctx.Session.State.Member(ctx.Message.GuildID, ctx.Message.Author.ID)
-	if err != nil {
-		if replyErr := ctx.Reply(fmt.Sprintf("could not find member: %s", err)); replyErr != nil {
-			return false, replyErr
-		}
-		return false, err
-	}
-
-	return slices.Contains(mem.Roles, givenRole), nil
 }

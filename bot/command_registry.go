@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -96,4 +97,16 @@ func (c *CommandCtx) Reply(s string) error {
 func (c *CommandCtx) DirectReply(s string) error {
 	_, err := c.Session.ChannelMessageSend(c.Message.Author.ID, s)
 	return err
+}
+
+func (c *CommandCtx) HasDiscordRole(givenRole string) (bool, error) {
+	mem, err := c.Session.State.Member(c.Message.GuildID, c.Message.Author.ID)
+	if err != nil {
+		if replyErr := c.Reply(fmt.Sprintf("could not find member: %s", err)); replyErr != nil {
+			return false, replyErr
+		}
+		return false, err
+	}
+
+	return slices.Contains(mem.Roles, givenRole), nil
 }
