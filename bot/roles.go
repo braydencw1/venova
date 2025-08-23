@@ -28,7 +28,7 @@ func roleJoinCmd(ctx CommandCtx) error {
 	args := ctx.Args
 	msg := ctx.Message
 	sess := ctx.Session
-	// roleID, exists := joinableRolesMap[args[0]]
+
 	var roleIDInt int64
 	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
 	if err != nil {
@@ -40,6 +40,16 @@ func roleJoinCmd(ctx CommandCtx) error {
 		}
 	}
 	roleID := strconv.Itoa(int(roleIDInt))
+
+	hasRole, err := ctx.HasDiscordRole(roleID)
+
+	if err != nil {
+		return err
+	}
+
+	if hasRole {
+		return nil
+	}
 
 	if err := sess.GuildMemberRoleAdd(msg.GuildID, msg.Author.ID, roleID); err != nil {
 		log.Printf("error adding role: %s", err)
@@ -66,8 +76,18 @@ func roleLeaveCmd(ctx CommandCtx) error {
 	}
 	roleID := fmt.Sprintf("%d", roleIDInt)
 
+	hasRole, err := ctx.HasDiscordRole(roleID)
+
+	if err != nil {
+		return err
+	}
+
+	if !hasRole {
+		return nil
+	}
+
 	if err := ctx.Session.GuildMemberRoleRemove(msg.GuildID, msg.Author.ID, roleID); err != nil {
-		return fmt.Errorf("error removing role: %w", err)
+		return fmt.Errorf("could not remove role: %w", err)
 	}
 
 	log.Printf("Removed user with id: %s (%s) from %s role", msg.Author.ID, msg.Author.Username, roleID)

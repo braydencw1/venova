@@ -32,7 +32,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	defer conn.Close()
+
+	defer func() {
+		err = conn.Close()
+		if err != nil {
+			log.Fatalf("could not close audio connection: %s", err)
+		}
+	}()
 
 	cmd := exec.Command(ffmpegPath,
 		"-f", "dshow",

@@ -2,6 +2,7 @@ package sshcmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -42,7 +43,13 @@ func RunCommand(client *ssh.Client, command string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer session.Close()
+
+	defer func() {
+		if err := session.Close(); err != nil {
+			log.Printf("ERROR: %s", err)
+		}
+
+	}()
 
 	output, err := session.CombinedOutput(command)
 	if err != nil {

@@ -75,7 +75,13 @@ func execDockerCompose(action string) error {
 	if err != nil {
 		return fmt.Errorf("ssh error: %w", err)
 	}
-	defer client.Close()
+
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("ERROR: %s", err)
+		}
+
+	}()
 
 	com, err := sshcmd.RunCommand(client, fmt.Sprintf("docker-compose -f /app/docker-compose.yml %s", action))
 	if err != nil {
@@ -84,6 +90,7 @@ func execDockerCompose(action string) error {
 	log.Printf("Compose command response: %s", com)
 	return nil
 }
+
 func initMC() (string, string, string, error) {
 	rconHost := os.Getenv("MC_HOST")
 	rconPort := os.Getenv("RCON_PORT")
@@ -108,7 +115,13 @@ func minecraftCommand(command string) (string, error) {
 		log.Printf("Error connecting to RCON: %s", err)
 		return "", fmt.Errorf("unable to connect to rcon server: %s", err)
 	}
-	defer con.Close()
+
+	defer func() {
+		if err := con.Close(); err != nil {
+			log.Printf("ERROR: %s", err)
+		}
+	}()
+
 	resp, err := con.Execute(command)
 	if err != nil {
 		log.Printf("Error, %s", err)
