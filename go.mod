@@ -1,6 +1,6 @@
 module github.com/braydencw1/venova
 
-go 1.25.0
+go 1.25.1
 
 require (
 	github.com/alecthomas/kong v1.9.0
