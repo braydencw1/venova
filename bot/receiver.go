@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/braydencw1/venova/pkg/util"
 	"github.com/bwmarrin/discordgo"
 	"github.com/subosito/gotenv"
 )
@@ -81,7 +82,7 @@ func NewAudioReceiver(vc *discordgo.VoiceConnection, port string) (*AudioReceive
 }
 
 func getAudioServerPort() string {
-	return GetEnvOrDefault("AUDIO_SERVER_PORT", "5005")
+	return util.GetEnvOrDefault("AUDIO_SERVER_PORT", "5005")
 }
 
 func (ar *AudioReceiver) Run() {

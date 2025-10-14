@@ -2,7 +2,6 @@ package bot
 
 import (
 	"log"
-	"os"
 
 	"github.com/braydencw1/venova/db"
 
@@ -35,13 +34,4 @@ func getUserVoiceChannel(s *discordgo.Session, gId, uId string) string {
 		}
 	}
 	return ""
-}
-
-func GetEnvOrDefault(key, def string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		log.Printf("%s is empty or not defined. Defaulting to: %s", key, def)
-		v = def
-	}
-	return v
 }
