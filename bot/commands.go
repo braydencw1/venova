@@ -22,6 +22,8 @@ func InitCommands() *CommandRegistry {
 	cr.Register("rjoin", roleJoinCmd, 1, "Usage !rjoin <role>. Joins a joinable role.")
 	// Leave role from list
 	cr.Register("rleave", roleLeaveCmd, 1, "Usage !rleave <role>. Leaves a joinable role.")
+	// Roll a die or dice
+	cr.Register("roll", rollCmd, 1, "Usage: !roll [dice] [adv/dis]. Example: !roll 3d6+3 or !roll d20 adv")
 	// Set timer
 	cr.Register("set", setTimerCmd, 1, "Usage !set <00h-00m>. Set a timer in which the bot will DM you when the timer is up.")
 	// See when dnd is

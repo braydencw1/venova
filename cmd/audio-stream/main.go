@@ -9,9 +9,16 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/braydencw1/venova"
-	"github.com/braydencw1/venova/bot"
+	"github.com/braydencw1/venova/pkg/util"
 	"github.com/joho/godotenv"
 )
+
+type AudioSender struct {
+	Address     string
+	FfmpegPath  string
+	AudioDevice string
+	AudioFormat string
+}
 
 var cli struct {
 	Version bool `help:"Show version" short:"v"`
@@ -27,8 +34,10 @@ func main() {
 		fmt.Println(ver)
 		os.Exit(0)
 	}
-	server, ffmpegPath := gatherVars()
-	conn, err := net.Dial("udp", server)
+
+	as := InitAudioSender()
+
+	conn, err := net.Dial("udp", as.Address)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -40,16 +49,16 @@ func main() {
 		}
 	}()
 
-	cmd := exec.Command(ffmpegPath,
-		"-f", "dshow",
-		"-i", "audio=CABLE Output (VB-Audio Virtual Cable)",
+	cmd := exec.Command(as.FfmpegPath,
+		"-f", as.AudioFormat,
+		"-i", as.AudioDevice,
 		"-ac", "2",
 		"-ar", "48000",
 		"-c:a", "libopus",
 		"-b:a", "64k",
 		"-frame_size", "960",
 		"-f", "rtp",
-		"rtp:"+server,
+		"rtp:"+as.Address,
 	)
 
 	err = cmd.Start()
@@ -65,14 +74,26 @@ func main() {
 
 }
 
-func gatherVars() (string, string) {
+func InitAudioSender() *AudioSender {
+
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Error loading .env file: %s", err)
 	}
-	port := bot.GetEnvOrDefault("AUDIO_SERVER_PORT", "5005")
-	server := bot.GetEnvOrDefault("AUDIO_SERVER_IP", "127.0.0.1")
-	ffmpegPath := bot.GetEnvOrDefault("FFMPEG_PATH", "ffmpeg")
 
+	port := util.GetEnvOrDefault("AUDIO_SERVER_PORT", "5005")
+	server := util.GetEnvOrDefault("AUDIO_SERVER_IP", "127.0.0.1")
+	ffmpegPath := util.GetEnvOrDefault("FFMPEG_PATH", "ffmpeg")
+	audioFormat := util.GetEnvOrDefault("AUDIO_FORMAT", "pulse")
+	audioDevice := util.GetEnvOrDefault("AUDIO_DEVICE", "default")
 	addr := fmt.Sprintf("%s:%s", server, port)
-	return addr, ffmpegPath
+	a := AudioSender{
+		Address:     addr,
+		FfmpegPath:  ffmpegPath,
+		AudioDevice: audioDevice,
+		AudioFormat: audioFormat,
+	}
+
+	log.Printf("Streaming from device %q using %s to %s", audioDevice, audioFormat, addr)
+
+	return &a
 }
