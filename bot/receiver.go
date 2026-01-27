@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/braydencw1/venova/pkg/util"
 	"github.com/bwmarrin/discordgo"
@@ -40,6 +41,11 @@ func playAudioCmd(ctx CommandCtx) error {
 		log.Printf("Error joining VC to play audio: %s", err)
 		return ctx.Reply("Failed to join voice channel.")
 	}
+
+	for !voiceConn.Ready {
+		time.Sleep(50 * time.Millisecond)
+	}
+
 	port := getAudioServerPort()
 	if err := ensureValidPort(port); err != nil {
 		log.Fatalf("%s", err)
