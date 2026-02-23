@@ -31,19 +31,22 @@ func main() {
 		}
 	}()
 
-	discord.AddHandler(bot.OnReady)
-	discord.AddHandler(bot.HandleMessageEvents)
-	// discord.AddHandler(bot.HandleVoiceStateUpdate)
-	log.Printf("Venova is online.")
-
 	err := db.OpenDatabase(dsn)
 	if err != nil {
 		log.Panicf("Database connection is rough, to say the least: %v", err)
 	}
-	cr := bot.InitCommands()
 
-	discord.AddHandler(cr.HandleMessage)
+	discord.AddHandler(bot.OnReady)
+	discord.AddHandler(bot.HandleMessageEvents)
 
+	discord.AddHandler(bot.InitCommands())
+
+	streamers, err := db.GetStreamers()
+	if err != nil {
+		log.Printf("Could not initialize streamers: %w", err)
+	}
+
+	go bot.PollStreamer(discord, streamers)
 	go bot.BirthdateCheckRoutine(discord)
 	go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely

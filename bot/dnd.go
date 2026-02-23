@@ -58,20 +58,25 @@ func playDndCmd(ctx CommandCtx) error {
 func whenIsDndCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
 	now := time.Now()
+
 	currRoleId := getMemberDNDRole(msg.Member)
 	if currRoleId == "" {
 		return ctx.Reply("Could not find DND role")
 	}
+
 	dateOfPlay, _, err := db.GetLatestPlayDate(currRoleId)
 	if err != nil {
 		return ctx.Reply("Could not find play date information. Perhaps wrong server.")
 	}
+
 	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
 	if dateOfPlay.Before(now) {
 		if err := ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate)); err != nil {
 			return err
 		}
+		return ctx.Reply(fmtDate)
 	}
+
 	if err = ctx.Reply(fmtDate); err != nil {
 		return err
 	}
