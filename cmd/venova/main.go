@@ -33,13 +33,13 @@ func main() {
 
 	err := db.OpenDatabase(dsn)
 	if err != nil {
-		log.Panicf("Database connection is rough, to say the least: %v", err)
+		log.Panicf("DSN error: %s", err)
 	}
 
 	discord.AddHandler(bot.OnReady)
 	discord.AddHandler(bot.HandleMessageEvents)
 
-	discord.AddHandler(bot.InitCommands())
+	discord.AddHandler(bot.InitCommands().HandleMessage)
 
 	streamers, err := db.GetStreamers()
 	if err != nil {
