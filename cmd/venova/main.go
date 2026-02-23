@@ -43,7 +43,7 @@ func main() {
 
 	streamers, err := db.GetStreamers()
 	if err != nil {
-		log.Printf("Could not initialize streamers: %w", err)
+		log.Printf("Could not initialize streamers: %s", err)
 	}
 
 	go bot.PollStreamer(discord, streamers)
