@@ -1,15 +1,11 @@
 package db
 
-import (
-	"time"
-)
-
 type Streamer struct {
-	ID          uint `gorm:"primaryKey"`
-	Name        string
-	URL         string `gorm:"uniqueIndex"`
-	IsLive      bool
-	LastChecked time.Time
+	ID        uint `gorm:"primaryKey"`
+	Name      string
+	URL       string `gorm:"uniqueIndex"`
+	ChannelID string
+	IsLive    bool
 }
 
 func GetStreamers() ([]Streamer, error) {

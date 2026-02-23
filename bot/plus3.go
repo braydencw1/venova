@@ -38,8 +38,11 @@ func PollStreamer(s *discordgo.Session, list []db.Streamer) {
 			}
 
 			if live {
-				msg := fmt.Sprintf("🔴 %s is LIVE!\n%s", streamer.Name)
-				s.ChannelMessageSend(channelID, msg)
+				msg := fmt.Sprintf("🔴 %s is LIVE!", streamer.Name)
+				_, err := s.ChannelMessageSend(streamer.ChannelID, msg)
+				if err != nil {
+					log.Print(err)
+				}
 			}
 
 		}
@@ -52,7 +55,11 @@ func checkLive(apiURL string) (bool, error) {
 		return false, err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Print(err)
+		}
+	}()
 
 	switch resp.StatusCode {
 

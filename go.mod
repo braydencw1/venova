@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/alecthomas/kong v1.14.0
-	github.com/bwmarrin/discordgo v0.29.1-0.20251229161010-9f6aa8159fc6
+	github.com/bwmarrin/discordgo v0.29.1-0.20260214123928-f43dd94faaac
 	github.com/gorcon/rcon v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/subosito/gotenv v1.6.0
