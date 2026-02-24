@@ -105,7 +105,13 @@ func checkLive(url string) (StreamInfo, bool) {
 	if err != nil {
 		return stream, false
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Print(err)
+		}
+
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return stream, false
