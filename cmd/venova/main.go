@@ -41,12 +41,12 @@ func main() {
 
 	discord.AddHandler(bot.InitCommands().HandleMessage)
 
-	streamers, err := db.GetStreamers()
+	HardlightStreamer, err := db.GetHardlightStreamer()
 	if err != nil {
-		log.Printf("Could not initialize streamers: %s", err)
+		log.Printf("Could not initialize HardlightStreamer: %s", err)
 	}
 
-	go bot.PollStreamer(discord, streamers)
+	go bot.PollStreamer(discord, HardlightStreamer)
 	go bot.BirthdateCheckRoutine(discord)
 	go bot.PlayDateCheckRoutine(discord)
 	select {} // Block the main goroutine indefinitely

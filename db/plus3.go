@@ -1,19 +1,21 @@
 package db
 
-type Streamer struct {
-	ID        uint `gorm:"primaryKey"`
+type HardlightStreamer struct {
+	ID        int `gorm:"primaryKey"`
 	Name      string
-	URL       string `gorm:"uniqueIndex"`
+	APIURL    string `gorm:"uniqueIndex"`
+	WatchURL  string
 	ChannelID string
 	IsLive    bool
 }
 
-func GetStreamers() ([]Streamer, error) {
-	var streamers []Streamer
+func GetHardlightStreamer() ([]HardlightStreamer, error) {
+	var streamer []HardlightStreamer
 
-	err := db.Find(&streamers).Error
+	err := db.Find(&streamer).Error
 	if err != nil {
-		return []Streamer{}, err
+		return []HardlightStreamer{}, err
 	}
-	return streamers, nil
+
+	return streamer, nil
 }
