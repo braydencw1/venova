@@ -1,8 +1,10 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -124,6 +126,10 @@ func getComposePath(client *ssh.Client) (string, error) {
 func execCompose(action string) error {
 	client, err := sshcmd.ConnectToDev()
 	if err != nil {
+		var netErr *net.OpError
+		if errors.As(err, &netErr) && netErr.Op == "dial" {
+			return fmt.Errorf("could not reach the Minecraft server")
+		}
 		return fmt.Errorf("ssh error: %w", err)
 	}
 

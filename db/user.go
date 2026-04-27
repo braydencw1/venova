@@ -6,17 +6,17 @@ import (
 )
 
 type BirthdayMsg struct {
-	DiscordId     int
+	DiscordId     int64
 	BdayResponse  string
 	TextChannelID string
 }
 
 type User struct {
 	ID            int `gorm:"primaryKey"`
-	DiscordId     int `gorm:"column:disc_id"`
+	DiscordId     int64 `gorm:"column:disc_id"`
 	FirstName     string
 	LastName      string
-	Dob           time.Time
+	Dob           *time.Time `gorm:"type:timestamptz"`
 	BdayResponse  string
 	TextChannelID string
 }
@@ -39,7 +39,7 @@ type BirthdayReminderUser struct {
 func GetBirthdays(dateToCheck time.Time) ([]BirthdayMsg, error) {
 	var users []User
 
-	res := db.Where("EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
+	res := db.Where("dob IS NOT NULL AND EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
 	if res.Error != nil {
 		fmt.Println("Error: ", res.Error)
 		return nil, res.Error
