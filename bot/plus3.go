@@ -30,10 +30,16 @@ type Viewers struct {
 	WebTransport int `json:"webtransport"`
 }
 
+const (
+	pollInterval  = 1 * time.Minute
+	alertCooldown = time.Hour
+	offlineAfter  = 3
+)
+
 type liveState struct {
 	IsLive        bool
-	LastStartedAt int64
 	LastAlertTime time.Time
+	failCount     int
 }
 
 var httpClient = &http.Client{
@@ -42,9 +48,8 @@ var httpClient = &http.Client{
 
 func PollStreamer(s *discordgo.Session, list []db.HardlightStreamer) {
 	state := make(map[int]*liveState)
-	cooldown := time.Hour
 
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -58,22 +63,23 @@ func PollStreamer(s *discordgo.Session, list []db.HardlightStreamer) {
 			}
 
 			if !live {
-				if st.IsLive {
+				st.failCount++
+				if st.IsLive && st.failCount >= offlineAfter {
 					st.IsLive = false
 					log.Printf("%s went offline", streamer.Name)
 				}
 				continue
 			}
 
-			newSession := st.LastStartedAt != 0 && st.LastStartedAt != stream.StartedAt
-			if !st.IsLive || newSession {
-				// cooldown protection
-				if time.Since(st.LastAlertTime) < cooldown {
+			st.failCount = 0
+
+			if !st.IsLive {
+				if time.Since(st.LastAlertTime) < alertCooldown {
+					st.IsLive = true
 					continue
 				}
 
 				st.IsLive = true
-				st.LastStartedAt = stream.StartedAt
 				st.LastAlertTime = time.Now()
 
 				handleLive(s, streamer, stream)
