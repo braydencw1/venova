@@ -58,7 +58,7 @@ build:
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT} ${SOURCE_FILE}
-    - ./${OUTPUT} -v
+    - ./${OUTPUT} version
 # Audio Linux
     - |
       GOOS=linux GOARCH=amd64 go build \
@@ -69,7 +69,7 @@ build:
       -X 'github.com/braydencw1/venova.REFERENCE=${CI_COMMIT_REF_NAME}' \
       -X 'github.com/braydencw1/venova.BUILT=${CI_PIPELINE_CREATED_AT}'" \
       -o ${OUTPUT_AUDIO} ${AUDIO_SOURCE_FILE}
-    - ./${OUTPUT_AUDIO} -v
+    - ./${OUTPUT_AUDIO} version
   artifacts:
     paths:
       - "${OUTPUT}"

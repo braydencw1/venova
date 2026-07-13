@@ -9,14 +9,7 @@ import (
 
 	"github.com/braydencw1/venova/pkg/util"
 	"github.com/bwmarrin/discordgo"
-	"github.com/subosito/gotenv"
 )
-
-func init() {
-	if err := gotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
-	}
-}
 
 type AudioReceiver struct {
 	done chan struct{}

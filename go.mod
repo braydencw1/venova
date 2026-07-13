@@ -3,11 +3,9 @@ module github.com/braydencw1/venova
 go 1.26.4
 
 require (
-	github.com/alecthomas/kong v1.15.0
 	github.com/bwmarrin/discordgo v0.29.1-0.20260214123928-f43dd94faaac
 	github.com/gorcon/rcon v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/subosito/gotenv v1.6.0
 	golang.org/x/crypto v0.53.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1

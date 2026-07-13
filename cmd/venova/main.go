@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/alecthomas/kong"
 	"github.com/braydencw1/venova"
 	"github.com/braydencw1/venova/bot"
 	"github.com/braydencw1/venova/db"
@@ -14,9 +13,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var cli struct {
-	Version bool `help:"Show version" short:"v"`
-}
 var (
 	dsn   string
 	token string
@@ -24,6 +20,7 @@ var (
 
 func main() {
 	handleCommandLine()
+	loadEnv()
 	discord := startDiscordSession()
 	defer func() {
 		if err := discord.Close(); err != nil {
@@ -52,7 +49,7 @@ func main() {
 	select {} // Block the main goroutine indefinitely
 }
 
-func init() {
+func loadEnv() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file:", err)
 	}
@@ -66,6 +63,7 @@ func init() {
 	)
 	token = os.Getenv("TOKEN")
 
+	bot.InitBotID()
 }
 
 func startDiscordSession() *discordgo.Session {
@@ -82,8 +80,7 @@ func startDiscordSession() *discordgo.Session {
 }
 
 func handleCommandLine() {
-	kong.Parse(&cli)
-	if cli.Version {
+	if len(os.Args) > 1 && os.Args[1] == "version" {
 		ver, err := venova.GetVersionInfo("venova")
 		if err != nil {
 			log.Fatalf("%s", err)

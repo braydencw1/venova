@@ -8,15 +8,13 @@ import (
 	"time"
 
 	"github.com/braydencw1/venova/db"
-	"github.com/joho/godotenv"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found.")
-	}
+// InitBotID reads BOT_ID from the environment. It must be called once,
+// after .env has been loaded, before any handler that references venovaId runs.
+func InitBotID() {
 	venovaId = os.Getenv("BOT_ID")
 	if venovaId == "" {
 		log.Fatalf("Must provide BOT_ID")

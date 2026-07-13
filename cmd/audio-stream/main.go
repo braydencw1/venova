@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/alecthomas/kong"
 	"github.com/braydencw1/venova"
 	"github.com/braydencw1/venova/pkg/util"
 	"github.com/joho/godotenv"
@@ -20,13 +19,8 @@ type AudioSender struct {
 	AudioFormat string
 }
 
-var cli struct {
-	Version bool `help:"Show version" short:"v"`
-}
-
 func main() {
-	kong.Parse(&cli)
-	if cli.Version {
+	if len(os.Args) > 1 && os.Args[1] == "version" {
 		ver, err := venova.GetVersionInfo("venova-audio-stream")
 		if err != nil {
 			log.Fatalf("%s", err)
