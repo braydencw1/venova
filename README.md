@@ -29,7 +29,7 @@ These variables configure the bot, database, Minecraft, RCON, and audio server.
 | `MC_HOST` | Minecraft server host | — |
 | `MC_PORT` | Minecraft server port | — |
 | `MC_USER` | SSH username for connecting to MC host | — |
-| `MC_SSH_PATH` | Path to SSH key for MC host | — |
+| `MC_SSH_KEY` | SSH private key contents for MC host | — |
 
 ---
 
@@ -63,7 +63,7 @@ DB_PORT=5432
 MC_HOST=minecraft.example.com
 MC_PORT=25565
 MC_USER=mcadmin
-MC_SSH_PATH=/home/user/.ssh/id_rsa
+MC_SSH_KEY="-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----"
 
 RCON_HOST=127.0.0.1
 RCON_PORT=25575
