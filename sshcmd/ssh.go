@@ -12,13 +12,9 @@ func ConnectToDev() (*ssh.Client, error) {
 	mcHost := os.Getenv("MC_HOST")
 	mcPort := os.Getenv("MC_PORT")
 	mcUser := os.Getenv("MC_USER")
-	mcSshPath := os.Getenv("MC_SSH_PATH")
+	mcSshKey := os.Getenv("MC_SSH_KEY")
 
-	privateKeyFile, err := os.ReadFile(mcSshPath)
-	if err != nil {
-		return nil, err
-	}
-	signer, err := ssh.ParsePrivateKey(privateKeyFile)
+	signer, err := ssh.ParsePrivateKey([]byte(mcSshKey))
 	if err != nil {
 		return nil, err
 	}
