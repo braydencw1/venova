@@ -51,7 +51,7 @@ func main() {
 
 func loadEnv() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
+		log.Println(".env file not found, using environment variables from the runtime environment")
 	}
 
 	dsn = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
