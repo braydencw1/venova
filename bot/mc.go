@@ -45,7 +45,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 			err := execCompose(action.Command)
 			if err != nil {
 				log.Printf("%s", err)
-				if err := ctx.Reply(fmt.Sprintf("%s", err)); err != nil {
+				if err := ctx.Reply("Could not modify the Minecraft server, see logs for details."); err != nil {
 					log.Printf("error replying manageMinecraftCmd %s", err)
 				}
 				return
