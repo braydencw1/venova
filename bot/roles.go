@@ -30,6 +30,7 @@ func roleJoinCmd(ctx CommandCtx) error {
 	sess := ctx.Session
 
 	var roleIDInt int64
+	found := false
 	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
 	if err != nil {
 		return fmt.Errorf("issue retrieving joinable roles: %s", err)
@@ -37,7 +38,11 @@ func roleJoinCmd(ctx CommandCtx) error {
 	for _, role := range roles {
 		if strings.EqualFold(args[0], role.Nickname) {
 			roleIDInt = role.RoleID
+			found = true
 		}
+	}
+	if !found {
+		return ctx.Reply(fmt.Sprintf("No joinable role named %q.", args[0]))
 	}
 	roleID := strconv.Itoa(int(roleIDInt))
 
@@ -65,6 +70,7 @@ func roleLeaveCmd(ctx CommandCtx) error {
 	msg := ctx.Message
 
 	var roleIDInt int64
+	found := false
 	roles, err := db.GetJoinableRoles(ctx.Message.GuildID)
 	if err != nil {
 		return fmt.Errorf("issue retrieving joinable roles: %s", err)
@@ -72,7 +78,11 @@ func roleLeaveCmd(ctx CommandCtx) error {
 	for _, role := range roles {
 		if strings.EqualFold(args[0], role.Nickname) {
 			roleIDInt = role.RoleID
+			found = true
 		}
+	}
+	if !found {
+		return ctx.Reply(fmt.Sprintf("No joinable role named %q.", args[0]))
 	}
 	roleID := fmt.Sprintf("%d", roleIDInt)
 

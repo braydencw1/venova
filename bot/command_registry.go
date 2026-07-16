@@ -41,6 +41,10 @@ func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error
 }
 
 func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.MessageCreate) {
+	if msg.Author.Bot {
+		return
+	}
+
 	parts := strings.SplitN(msg.Content, " ", 2)
 
 	if len(parts) == 0 || len(parts[0]) == 0 {

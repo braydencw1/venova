@@ -28,6 +28,7 @@ func main() {
 		}
 	}()
 
+	log.Printf("connecting to database at %s:%s...", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
 	err := db.OpenDatabase(dsn)
 	if err != nil {
 		log.Panicf("DSN error: %s", err)
@@ -54,7 +55,9 @@ func loadEnv() {
 		log.Println(".env file not found, using environment variables from the runtime environment")
 	}
 
-	dsn = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+	requireEnv("DB_USER", "DB_PASS", "DB_HOST", "DB_PORT", "DB_DB", "TOKEN")
+
+	dsn = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable connect_timeout=5",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASS"),
 		os.Getenv("DB_HOST"),
@@ -77,6 +80,18 @@ func startDiscordSession() *discordgo.Session {
 		log.Fatal("Error opening Discord connection:", err)
 	}
 	return discord
+}
+
+func requireEnv(names ...string) {
+	var missing []string
+	for _, name := range names {
+		if os.Getenv(name) == "" {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 {
+		log.Fatalf("missing required environment variable(s): %v", missing)
+	}
 }
 
 func handleCommandLine() {

@@ -35,9 +35,7 @@ func manageMinecraftCmd(ctx CommandCtx) error {
 	}
 	action, exists := minecraftActions[args[0]]
 	if !exists {
-		if err := ctx.Reply("Action is not available."); err != nil {
-			return err
-		}
+		return ctx.Reply("Action is not available.")
 	}
 	if ctx.IDChecker.IsMinecraftAdmin(msg.Author.ID) || ctx.IDChecker.IsAdmin(msg.Author.ID) {
 		mcMsg, _ := sess.ChannelMessageSend(msg.ChannelID, "Attempting to modify the minecraft server...")

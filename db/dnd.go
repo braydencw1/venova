@@ -49,7 +49,7 @@ func InsertPlayDate(playTime time.Time, roleId string) error {
 	}
 	insertRes := db.Create(&insertPlayDate)
 	if insertRes.Error != nil {
-		return res.Error
+		return insertRes.Error
 	}
 	return nil
 }
