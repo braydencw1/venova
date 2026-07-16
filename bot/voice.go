@@ -28,7 +28,7 @@ func dcCmd(ctx CommandCtx) error {
 	if len(ctx.Args) < 1 {
 		uId = venovaId
 	} else {
-		uId = strings.Trim(ctx.Args[0], "<@>")
+		uId = strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(ctx.Args[0], "<@!"), "<@"), ">")
 	}
 
 	if uId == venovaId {
@@ -47,6 +47,7 @@ func dcCmd(ctx CommandCtx) error {
 
 func monitorVoiceActivity(session *discordgo.Session, guildID, channelID string) {
 	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 
 	for range ticker.C {
 		guild, err := session.State.Guild(guildID)
@@ -62,7 +63,7 @@ func monitorVoiceActivity(session *discordgo.Session, guildID, channelID string)
 			}
 		}
 		if userCount != 1 {
-			return
+			continue
 		}
 		log.Println("Bot is alone in VC, disconnecting...")
 		err = LeaveVoiceChannel(session, guildID)

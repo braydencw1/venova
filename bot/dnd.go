@@ -71,10 +71,7 @@ func whenIsDndCmd(ctx CommandCtx) error {
 
 	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
 	if dateOfPlay.Before(now) {
-		if err := ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate)); err != nil {
-			return err
-		}
-		return ctx.Reply(fmtDate)
+		return ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
 	}
 
 	if err = ctx.Reply(fmtDate); err != nil {

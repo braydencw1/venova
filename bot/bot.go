@@ -44,7 +44,7 @@ func helpCmd(ctx CommandCtx) error {
 }
 
 func HandleMessageEvents(discord *discordgo.Session, msg *discordgo.MessageCreate) {
-	if msg.Author.ID == discord.State.User.ID {
+	if msg.Author.ID == discord.State.User.ID || msg.Author.Bot {
 		return
 	}
 	log.Printf("%s: %s", msg.Author.Username, msg.Content)

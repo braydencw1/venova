@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
@@ -25,6 +26,7 @@ func setTimerCmd(ctx CommandCtx) error {
 	timer, err := createTimer(extraParts[0])
 	if err != nil {
 		log.Printf("Could not create timer %s", err)
+		return ctx.Reply(fmt.Sprintf("Invalid duration %q: %s", extraParts[0], err))
 	}
 	timerDestUserName, err := GetUsernameFromID(sess, extraParts[1])
 	if err != nil {

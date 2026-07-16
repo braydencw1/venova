@@ -49,7 +49,7 @@ func main() {
 		"-ac", "2",
 		"-ar", "48000",
 		"-c:a", "libopus",
-		"-b:a", "64k",
+		"-b:a", "128k",
 		"-frame_size", "960",
 		"-f", "rtp",
 		"rtp:"+as.Address,
