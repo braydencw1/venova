@@ -12,11 +12,14 @@ type BirthdayMsg struct {
 }
 
 type User struct {
-	ID            int `gorm:"primaryKey"`
-	DiscordId     int64 `gorm:"column:disc_id"`
-	FirstName     string
-	LastName      string
-	Dob           *time.Time `gorm:"type:timestamptz"`
+	ID        int   `gorm:"primaryKey"`
+	DiscordId int64 `gorm:"column:disc_id"`
+	FirstName string
+	LastName  string
+	// A birthday is a calendar day, not an instant. Storing it as timestamptz
+	// made EXTRACT(MONTH/DAY) depend on the session timezone, which shifted
+	// birthdays by a day. Keep this as date so no conversion happens.
+	Dob           *time.Time `gorm:"type:date"`
 	BdayResponse  string
 	TextChannelID string
 }
