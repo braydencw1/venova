@@ -2,6 +2,8 @@ package bot
 
 func InitCommands() *CommandRegistry {
 	cr := NewCommandRegistry()
+	// Send today's birthday messages now (Admin)
+	cr.Register("bday", bdaySendCmd, 0, "Usage !bday. Sends today's birthday messages immediately, if there are any. Admins only.")
 	// Disconnect bot from VC
 	cr.Register("dc", dcCmd, 0, "Usage !dc <user> - Executes the disconnect user from VC command. Admins only.")
 	// Set DND Date (Admin)

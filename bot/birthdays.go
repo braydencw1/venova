@@ -10,13 +10,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func birthdateCheck(discord *discordgo.Session) {
+func birthdateCheck(discord *discordgo.Session) (int, error) {
 	nextDay := time.Now()
 
 	bdayMessages, err := db.GetBirthdays(nextDay)
 	if err != nil {
 		log.Printf("error fetching birthdates :%s", err)
-		return
+		return 0, err
 	}
 
 	for _, bdayMsg := range bdayMessages {
@@ -38,6 +38,24 @@ func birthdateCheck(discord *discordgo.Session) {
 			dmUser(discord, id, fmt.Sprintf("It's <@%d>'s birthday!", bdayMsg.DiscordId))
 		}
 	}
+	return len(bdayMessages), nil
+}
+
+// bdaySendCmd triggers the daily birthday check on demand instead of
+// waiting for the 8am routine. Admins only.
+func bdaySendCmd(ctx CommandCtx) error {
+	if !ctx.IDChecker.IsAdmin(ctx.Message.Author.ID) {
+		return nil
+	}
+
+	sent, err := birthdateCheck(ctx.Session)
+	if err != nil {
+		return ctx.Reply("Failed to fetch birthdays.")
+	}
+	if sent == 0 {
+		return ctx.Reply("No birthdays today.")
+	}
+	return ctx.Reply(fmt.Sprintf("Sent %d birthday message(s).", sent))
 }
 
 func BirthdateCheckRoutine(discord *discordgo.Session) {
@@ -50,6 +68,8 @@ func BirthdateCheckRoutine(discord *discordgo.Session) {
 		durTilNextCheck := next.Sub(now)
 		timer := time.NewTimer(durTilNextCheck)
 		<-timer.C
-		birthdateCheck(discord)
+		if _, err := birthdateCheck(discord); err != nil {
+			log.Printf("birthdate check routine err: %s", err)
+		}
 	}
 }
