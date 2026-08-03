@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	// Embeds the IANA timezone database in the binary. The runtime image
+	// (ubi-minimal) ships no /usr/share/zoneinfo, so without this the TZ env
+	// var cannot be resolved and time.Local silently falls back to UTC.
+	_ "time/tzdata"
 
 	"github.com/braydencw1/venova"
 	"github.com/braydencw1/venova/bot"

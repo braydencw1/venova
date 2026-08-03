@@ -10,10 +10,27 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func birthdateCheck(discord *discordgo.Session) (int, error) {
-	nextDay := time.Now()
+// Birthdays are boundaried by the community's local calendar day, not by
+// wherever the bot happens to run. Central covers both CST and CDT.
+const birthdayTZ = "America/Chicago"
 
-	bdayMessages, err := db.GetBirthdays(nextDay)
+var birthdayLoc = mustLoadLocation(birthdayTZ)
+
+// mustLoadLocation resolves a zone or refuses to start. cmd/venova imports
+// time/tzdata, so this cannot fail in practice - if it ever does, that import
+// was dropped and every date below would silently be UTC.
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("could not load timezone %q, is time/tzdata still imported? %s", name, err)
+	}
+	return loc
+}
+
+func birthdateCheck(discord *discordgo.Session) (int, error) {
+	today := time.Now().In(birthdayLoc)
+
+	bdayMessages, err := db.GetBirthdays(today)
 	if err != nil {
 		log.Printf("error fetching birthdates :%s", err)
 		return 0, err
@@ -60,10 +77,13 @@ func bdaySendCmd(ctx CommandCtx) error {
 
 func BirthdateCheckRoutine(discord *discordgo.Session) {
 	for {
-		now := time.Now()
-		next := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, now.Location())
-		if now.After(next) {
-			next = next.Add(24 * time.Hour)
+		now := time.Now().In(birthdayLoc)
+		// Calendar arithmetic, not duration arithmetic: adding 24h across a DST
+		// transition would land on 7am or 9am and stay drifted until restart.
+		// time.Date normalizes the overflowing day and re-resolves the offset.
+		next := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, birthdayLoc)
+		if !now.Before(next) {
+			next = time.Date(now.Year(), now.Month(), now.Day()+1, 8, 0, 0, 0, birthdayLoc)
 		}
 		durTilNextCheck := next.Sub(now)
 		timer := time.NewTimer(durTilNextCheck)
