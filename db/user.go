@@ -42,7 +42,9 @@ type BirthdayReminderUser struct {
 func GetBirthdays(dateToCheck time.Time) ([]BirthdayMsg, error) {
 	var users []User
 
-	res := db.Where("dob IS NOT NULL AND EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
+	// .Debug() overrides the globally Silent logger for this one query, logging
+	// the generated SQL and its bound parameters.
+	res := db.Debug().Where("dob IS NOT NULL AND EXTRACT(MONTH FROM dob) = ? AND EXTRACT(DAY FROM dob) = ?", int(dateToCheck.Month()), dateToCheck.Day()).Find(&users)
 	if res.Error != nil {
 		fmt.Println("Error: ", res.Error)
 		return nil, res.Error

@@ -35,6 +35,7 @@ func birthdateCheck(discord *discordgo.Session) (int, error) {
 		log.Printf("error fetching birthdates :%s", err)
 		return 0, err
 	}
+	log.Printf("birthday check for %s (month=%d day=%d): %d match(es)", today.Format("2006-01-02"), int(today.Month()), today.Day(), len(bdayMessages))
 
 	for _, bdayMsg := range bdayMessages {
 		response := bdayMsg.BdayResponse
