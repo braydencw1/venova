@@ -1,9 +1,11 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -11,24 +13,35 @@ import (
 	"github.com/braydencw1/venova/db"
 )
 
+type DiceGroup struct {
+	NumDice int
+	DieSize int
+}
+
 type Roll struct {
-	NumDice      int
-	DieSize      int
+	Groups       []DiceGroup
 	Modifier     int
 	Advantage    bool
 	Disadvantage bool
+}
+
+type GroupResult struct {
+	Group DiceGroup
+	Rolls []int
+}
+
+type AttemptResult struct {
+	Groups []GroupResult
+	Total  int
 }
 
 type RollResult struct {
-	Rolls        [][]int
-	Totals       []int
-	FinalTotal   int
+	Attempts     []AttemptResult
+	ChosenIdx    int
 	Modifier     int
 	Advantage    bool
 	Disadvantage bool
 }
-
-var rollPattern = regexp.MustCompile(`^(?i)(\d*)d\d+([+-]\d+)?$`)
 
 func playDndCmd(ctx CommandCtx) error {
 	msg := ctx.Message
@@ -40,7 +53,7 @@ func playDndCmd(ctx CommandCtx) error {
 	layout := "01-02-2006"
 	t, err := time.Parse(layout, args[0])
 	if err != nil {
-		return fmt.Errorf("error parsing date: %w", err)
+		return ctx.Reply("Invalid date. Use MM-DD-YYYY (e.g., 08-15-2026).")
 	}
 	currRoleId := getMemberDNDRole(msg.Member)
 	if currRoleId == "" {
@@ -57,7 +70,10 @@ func playDndCmd(ctx CommandCtx) error {
 
 func whenIsDndCmd(ctx CommandCtx) error {
 	msg := ctx.Message.Message
+	// Play dates are stored at midnight, so compare against the start of
+	// today or the bot claims there is no session on game day itself.
 	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 
 	currRoleId := getMemberDNDRole(msg.Member)
 	if currRoleId == "" {
@@ -70,7 +86,7 @@ func whenIsDndCmd(ctx CommandCtx) error {
 	}
 
 	fmtDate := fmt.Sprint(dateOfPlay.Format("01-02-2006"))
-	if dateOfPlay.Before(now) {
+	if dateOfPlay.Before(today) {
 		return ctx.Reply(fmt.Sprintf("There is no date currently set. Your last session was: %s", fmtDate))
 	}
 
@@ -81,167 +97,247 @@ func whenIsDndCmd(ctx CommandCtx) error {
 }
 
 func rollCmd(ctx CommandCtx) error {
+	if strings.EqualFold(ctx.Args[0], "stats") {
+		return ctx.Reply(RollStats())
+	}
+
+	roll, err := ParseRoll(ctx.Args)
+	if err != nil {
+		return ctx.Reply(err.Error())
+	}
+
+	return ctx.Reply(roll.Execute().FormatMessage())
+}
+
+var (
+	diceTermPattern = regexp.MustCompile(`^(\d*)d(\d+)$`)
+	errInvalidRoll  = errors.New("Invalid format. Use dice like 2d6+1d8+3 or d20, optionally with adv/dis.")
+)
+
+// ParseRoll parses full !roll arguments: a dice expression, possibly split
+// across arguments, with advantage/disadvantage flags anywhere among them.
+func ParseRoll(args []string) (Roll, error) {
 	advantage := false
 	disadvantage := false
 
-	if len(ctx.Args) > 1 {
-
-		swt := ctx.Args[1]
-		switch strings.ToLower(swt) {
+	rollArgs := []string{}
+	for _, arg := range args {
+		switch strings.ToLower(arg) {
 		case "a", "adv", "advantage":
 			advantage = true
 		case "d", "dis", "disadvantage":
 			disadvantage = true
+		default:
+			rollArgs = append(rollArgs, arg)
 		}
 	}
 
-	rollArgs := []string{}
-	for _, arg := range ctx.Args {
-		lower := strings.ToLower(arg)
-		if lower == "a" || lower == "adv" || lower == "advantage" ||
-			lower == "d" || lower == "dis" || lower == "disadvantage" {
-			continue
-		}
-		rollArgs = append(rollArgs, arg)
+	if advantage && disadvantage {
+		return Roll{}, errors.New("Pick either advantage or disadvantage, not both.")
 	}
 
-	roll := strings.Join(rollArgs, "")
-	roll = strings.ReplaceAll(roll, " ", "")
-
-	if !strings.Contains(strings.ToLower(roll), "d") {
-		return ctx.Reply("Must be NdM±K (e.g., 1d20+3 or d20).")
-	}
-
-	if !isValidRoll(roll) {
-		return ctx.Reply("Invalid format. Use NdM±K (e.g., 1d20+3 or d20).")
-	}
-
-	roll = strings.ToLower(roll)
-
-	parts := strings.SplitN(roll, "d", 2)
-
-	if len(parts) != 2 || parts[1] == "" {
-		return ctx.Reply("Invalid format. Use NdM±K (e.g., 1d20+3 or d20).")
-	}
-
-	numDiceStr := parts[0]
-
-	if numDiceStr == "" {
-		numDiceStr = "1"
-	}
-
-	numDice, err := strconv.Atoi(numDiceStr)
+	roll, err := ParseRollExpression(strings.Join(rollArgs, ""))
 	if err != nil {
-		return err
+		return Roll{}, err
 	}
-
-	if numDice <= 0 || numDice > 100 {
-		return ctx.Reply("Invalid number of dice (must be 1–100).")
-	}
-
-	modifier := 0
-	diePart := parts[1]
-	if diePart == "" {
-		return ctx.Reply("Missing die size.")
-	}
-
-	var dieSizeStr, modStr string
-	if strings.Contains(diePart, "+") {
-		split := strings.SplitN(diePart, "+", 2)
-		dieSizeStr, modStr = split[0], split[1]
-		modifier, err = strconv.Atoi(modStr)
-		if err != nil {
-			return ctx.Reply("Invalid modifier; must be a number.")
-		}
-	} else if strings.Contains(diePart, "-") {
-		split := strings.SplitN(diePart, "-", 2)
-		dieSizeStr, modStr = split[0], split[1]
-		modifier, err = strconv.Atoi(modStr)
-		if err != nil {
-			return ctx.Reply("Invalid modifier; must be a number.")
-		}
-		modifier = -modifier
-	} else {
-		dieSizeStr = diePart
-	}
-
-	dieSize, err := strconv.Atoi(dieSizeStr)
-	if err != nil {
-		return ctx.Reply("Invalid die size.")
-	}
-
-	if dieSize <= 0 || dieSize > 1000 {
-		return ctx.Reply("Invalid die size (must be 1–1000).")
-	}
-
-	r := Roll{
-		NumDice:      numDice,
-		DieSize:      dieSize,
-		Modifier:     modifier,
-		Advantage:    advantage,
-		Disadvantage: disadvantage,
-	}
-	rollResult := r.Execute()
-
-	msg := rollResult.FormatMessage()
-
-	return ctx.Reply(msg)
+	roll.Advantage = advantage
+	roll.Disadvantage = disadvantage
+	return roll, nil
 }
 
-func isValidRoll(arg string) bool {
-	return rollPattern.MatchString(arg)
+// ParseRollExpression parses a dice expression like "2d6+1d8+5-2" into dice
+// groups and a flat modifier.
+func ParseRollExpression(expr string) (Roll, error) {
+	expr = strings.ToLower(strings.ReplaceAll(expr, " ", ""))
+	if expr == "" {
+		return Roll{}, errors.New("Roll something, e.g. !roll 2d6+3 or !roll d20 adv.")
+	}
+
+	// Normalize subtraction into "+-" so the expression splits into signed terms.
+	expr = strings.ReplaceAll(expr, "-", "+-")
+	terms := strings.Split(expr, "+")
+
+	var roll Roll
+	totalDice := 0
+	for i, term := range terms {
+		if term == "" {
+			// A leading sign produces one empty first term; anything else
+			// (e.g. "2d6++3") is malformed.
+			if i == 0 {
+				continue
+			}
+			return Roll{}, errInvalidRoll
+		}
+
+		if m := diceTermPattern.FindStringSubmatch(term); m != nil {
+			numDice := 1
+			if m[1] != "" {
+				n, err := strconv.Atoi(m[1])
+				if err != nil || n <= 0 || n > 100 {
+					return Roll{}, errors.New("Invalid number of dice (must be 1–100).")
+				}
+				numDice = n
+			}
+			totalDice += numDice
+			if totalDice > 100 {
+				return Roll{}, errors.New("Too many dice (100 max across the whole roll).")
+			}
+
+			dieSize, err := strconv.Atoi(m[2])
+			if err != nil || dieSize <= 0 || dieSize > 1000 {
+				return Roll{}, errors.New("Invalid die size (must be 1–1000).")
+			}
+
+			roll.Groups = append(roll.Groups, DiceGroup{NumDice: numDice, DieSize: dieSize})
+			continue
+		}
+
+		if after, ok := strings.CutPrefix(term, "-"); ok && diceTermPattern.MatchString(after) {
+			return Roll{}, errors.New("Cannot subtract dice.")
+		}
+
+		mod, err := strconv.Atoi(term)
+		if err != nil {
+			return Roll{}, errInvalidRoll
+		}
+		roll.Modifier += mod
+	}
+
+	if len(roll.Groups) == 0 {
+		return Roll{}, errInvalidRoll
+	}
+	return roll, nil
 }
 
 func (r Roll) Execute() RollResult {
-	doRoll := func() ([]int, int) {
-		rolls := make([]int, r.NumDice)
-		total := 0
-		for i := 0; i < r.NumDice; i++ {
-			roll := rand.Intn(r.DieSize) + 1
-			rolls[i] = roll
-			total += roll
+	attempt := func() AttemptResult {
+		total := r.Modifier
+		groups := make([]GroupResult, 0, len(r.Groups))
+		for _, g := range r.Groups {
+			rolls := make([]int, g.NumDice)
+			for i := range rolls {
+				rolls[i] = rand.Intn(g.DieSize) + 1
+				total += rolls[i]
+			}
+			groups = append(groups, GroupResult{Group: g, Rolls: rolls})
 		}
-		total += r.Modifier
-		return rolls, total
+		return AttemptResult{Groups: groups, Total: total}
 	}
 
-	rolls1, total1 := doRoll()
 	result := RollResult{
-		Rolls:        [][]int{rolls1},
-		Totals:       []int{total1},
+		Attempts:     []AttemptResult{attempt()},
 		Modifier:     r.Modifier,
 		Advantage:    r.Advantage,
 		Disadvantage: r.Disadvantage,
-		FinalTotal:   total1,
 	}
 
 	if r.Advantage || r.Disadvantage {
-		rolls2, total2 := doRoll()
-		result.Rolls = append(result.Rolls, rolls2)
-		result.Totals = append(result.Totals, total2)
-
-		if r.Advantage && total2 > total1 {
-			result.FinalTotal = total2
-		} else if r.Disadvantage && total2 < total1 {
-			result.FinalTotal = total2
+		result.Attempts = append(result.Attempts, attempt())
+		second := result.Attempts[1].Total
+		first := result.Attempts[0].Total
+		if (r.Advantage && second > first) || (r.Disadvantage && second < first) {
+			result.ChosenIdx = 1
 		}
 	}
 
 	return result
 }
 
+func (r RollResult) FinalTotal() int {
+	return r.Attempts[r.ChosenIdx].Total
+}
+
+func (a AttemptResult) format(modifier int) string {
+	parts := make([]string, 0, len(a.Groups))
+	for _, g := range a.Groups {
+		nums := make([]string, len(g.Rolls))
+		for i, roll := range g.Rolls {
+			nums[i] = strconv.Itoa(roll)
+		}
+		parts = append(parts, fmt.Sprintf("%dd%d [%s]", g.Group.NumDice, g.Group.DieSize, strings.Join(nums, " ")))
+	}
+	s := strings.Join(parts, " + ")
+	if modifier != 0 {
+		s += fmt.Sprintf(" %+d", modifier)
+	}
+	return fmt.Sprintf("%s = %d", s, a.Total)
+}
+
 func (r RollResult) FormatMessage() string {
+	chosen := r.Attempts[r.ChosenIdx]
+
+	var b strings.Builder
 	if !r.Advantage && !r.Disadvantage {
-		return fmt.Sprintf(
-			"🎲 Roll: (%v) %+d = %d\n→ Result: **%d**",
-			r.Rolls[0], r.Modifier, r.FinalTotal, r.FinalTotal,
-		)
+		fmt.Fprintf(&b, "🎲 Roll: %s\n→ Result: **%d**", chosen.format(r.Modifier), chosen.Total)
+	} else {
+		label := "advantage"
+		if r.Disadvantage {
+			label = "disadvantage"
+		}
+		fmt.Fprintf(&b, ":game_die: Rolls: %s | %s\n→ Result: **%d** (%s)",
+			r.Attempts[0].format(r.Modifier), r.Attempts[1].format(r.Modifier), chosen.Total, label)
 	}
 
-	return fmt.Sprintf(
-		":game_die: Rolls: (%v) %+d = %d | (%v) %+d = %d\n→ Result: **%d**",
-		r.Rolls[0], r.Modifier, r.Totals[0],
-		r.Rolls[1], r.Modifier, r.Totals[1],
-		r.FinalTotal,
-	)
+	nat20, nat1 := false, false
+	for _, g := range chosen.Groups {
+		if g.Group.DieSize != 20 {
+			continue
+		}
+		for _, roll := range g.Rolls {
+			nat20 = nat20 || roll == 20
+			nat1 = nat1 || roll == 1
+		}
+	}
+	if nat20 {
+		b.WriteString("\n💥 **Natural 20!**")
+	}
+	if nat1 {
+		b.WriteString("\n💀 **Natural 1!**")
+	}
+
+	return b.String()
+}
+
+// RollStats rolls ability scores the classic way: 4d6 drop the lowest, six times.
+func RollStats() string {
+	var b strings.Builder
+	b.WriteString("🎲 Ability scores (4d6, drop lowest):\n")
+
+	totals := make([]int, 0, 6)
+	for range 6 {
+		rolls := make([]int, 4)
+		lowest := 0
+		sum := 0
+		for i := range rolls {
+			rolls[i] = rand.Intn(6) + 1
+			sum += rolls[i]
+			if rolls[i] < rolls[lowest] {
+				lowest = i
+			}
+		}
+		total := sum - rolls[lowest]
+		totals = append(totals, total)
+
+		parts := make([]string, len(rolls))
+		for i, roll := range rolls {
+			if i == lowest {
+				parts[i] = fmt.Sprintf("~~%d~~", roll)
+			} else {
+				parts[i] = strconv.Itoa(roll)
+			}
+		}
+		fmt.Fprintf(&b, "[%s] = **%d**\n", strings.Join(parts, " "), total)
+	}
+
+	slices.SortFunc(totals, func(a, b int) int { return b - a })
+	sum := 0
+	for _, t := range totals {
+		sum += t
+	}
+	strTotals := make([]string, len(totals))
+	for i, t := range totals {
+		strTotals[i] = strconv.Itoa(t)
+	}
+	fmt.Fprintf(&b, "→ Scores: %s (sum %d)", strings.Join(strTotals, ", "), sum)
+	return b.String()
 }

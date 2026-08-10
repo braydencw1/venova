@@ -16,9 +16,32 @@ type CommandCtx struct {
 	IDChecker IdentityChecker
 }
 
+type Permission int
+
+const (
+	PermEveryone Permission = iota
+	PermAdmin
+	// PermMcAdmin allows admins or Minecraft admins.
+	PermMcAdmin
+)
+
+func (p Permission) Allows(ctx CommandCtx) bool {
+	uID := ctx.Message.Author.ID
+	switch p {
+	case PermEveryone:
+		return true
+	case PermAdmin:
+		return ctx.IDChecker.IsAdmin(uID)
+	case PermMcAdmin:
+		return ctx.IDChecker.IsAdmin(uID) || ctx.IDChecker.IsMinecraftAdmin(uID)
+	}
+	return false
+}
+
 type Command struct {
 	fn              func(c CommandCtx) error
 	numRequiredArgs int
+	perm            Permission
 	help            string
 }
 
@@ -32,10 +55,11 @@ func NewCommandRegistry() *CommandRegistry {
 	}
 }
 
-func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int, help string) {
+func (c *CommandRegistry) Register(name string, command func(c CommandCtx) error, numArgs int, perm Permission, help string) {
 	c.commands[name] = &Command{
 		fn:              command,
 		numRequiredArgs: numArgs,
+		perm:            perm,
 		help:            help,
 	}
 }
@@ -68,20 +92,28 @@ func (c *CommandRegistry) HandleMessage(s *discordgo.Session, msg *discordgo.Mes
 	if len(parts) > 1 {
 		args = strings.Split(parts[1], " ")
 	}
-	if command.numRequiredArgs > 0 {
-		if len(args) < command.numRequiredArgs {
-			_, err := s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("the command %s has too few arguements.", commandName))
-			if err != nil {
-				log.Printf("err msgSend HandleMessage %s", err)
-			}
-			return
-		}
-	}
 	ctx := CommandCtx{
 		Session:   s,
 		Message:   msg,
 		Args:      args,
 		IDChecker: GetIdentityChecker(),
+	}
+
+	// Silently ignore commands the caller isn't allowed to use, matching the
+	// handlers' historical behavior. Checked before the arg-count reply so
+	// restricted commands aren't revealed to everyone.
+	if !command.perm.Allows(ctx) {
+		return
+	}
+
+	if command.numRequiredArgs > 0 {
+		if len(args) < command.numRequiredArgs {
+			_, err := s.ChannelMessageSend(msg.ChannelID, fmt.Sprintf("the command %s has too few arguments.", commandName))
+			if err != nil {
+				log.Printf("err msgSend HandleMessage %s", err)
+			}
+			return
+		}
 	}
 
 	go func() {

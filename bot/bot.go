@@ -32,12 +32,13 @@ func OnReady(discord *discordgo.Session, event *discordgo.Ready) {
 func helpCmd(ctx CommandCtx) error {
 	commands := InitCommands()
 	if len(ctx.Args) == 0 {
-		cmdNames := commands.ListCommands()
+		cmdNames := commands.ListCommandsFor(ctx)
 		return ctx.Reply(fmt.Sprintf("Available commands: %s", strings.Join(cmdNames, ", ")))
 	}
 
-	cmd, exists := commands.commands[ctx.Args[0]]
-	if exists {
+	// Commands the caller can't use are hidden, not explained.
+	cmd, exists := commands.commands[strings.ToLower(ctx.Args[0])]
+	if exists && cmd.perm.Allows(ctx) {
 		return ctx.Reply(cmd.help)
 	}
 	return ctx.Reply("Unknown command. Use !help to see all available commands.")
@@ -95,33 +96,3 @@ func playDateCheck(discord *discordgo.Session) {
 	}
 }
 
-func createTimer(timeLength string) (time.Time, error) {
-	duration, err := time.ParseDuration(timeLength)
-	if err != nil {
-		fmt.Println("Error parsing time:", err)
-		return time.Time{}, err
-	}
-	timer := time.Now().Add(duration)
-	return timer, nil
-}
-
-func TimerCheckerRoutine(discord *discordgo.Session, timer time.Time, UserID string, errChan chan error) {
-	ticker := time.NewTicker(1 * time.Minute) // Ticker to check every minute
-	defer ticker.Stop()
-	defer close(errChan)
-	for {
-		<-ticker.C
-		if time.Now().After(timer) {
-			dmChannel, err := discord.UserChannelCreate(UserID)
-			if err != nil {
-				errChan <- fmt.Errorf("error creating dm channel : %w", err)
-				return
-			}
-			_, err = discord.ChannelMessageSend(dmChannel.ID, "Your timer is up!")
-			if err != nil {
-				errChan <- fmt.Errorf("error sending dm for time : %w", err)
-			}
-			return
-		}
-	}
-}

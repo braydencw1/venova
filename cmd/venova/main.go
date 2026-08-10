@@ -51,6 +51,7 @@ func main() {
 	go bot.PollStreamer(discord, HardlightStreamer)
 	go bot.BirthdateCheckRoutine(discord)
 	go bot.PlayDateCheckRoutine(discord)
+	go bot.ResumeTimers(discord)
 	select {} // Block the main goroutine indefinitely
 }
 

@@ -1,44 +1,49 @@
 package bot
 
+import "slices"
+
 func InitCommands() *CommandRegistry {
 	cr := NewCommandRegistry()
-	// Send today's birthday messages now (Admin)
-	cr.Register("bday", bdaySendCmd, 0, "Usage !bday. Sends today's birthday messages immediately, if there are any. Admins only.")
+	// Send birthday messages now
+	cr.Register("bday", bdaySendCmd, 0, PermAdmin, "Usage !bday. Sends today's birthday messages immediately, if there are any. Admins only.")
 	// Disconnect bot from VC
-	cr.Register("dc", dcCmd, 0, "Usage !dc <user> - Executes the disconnect user from VC command. Admins only.")
+	cr.Register("dc", dcCmd, 0, PermAdmin, "Usage !dc <user> - Executes the disconnect user from VC command. Admins only.")
 	// Set DND Date (Admin)
-	cr.Register("dnd", playDndCmd, 1, "Usage !dnd <args> - Executes the play dnd command. Updates next schedules play date. Admins only.")
+	cr.Register("dnd", playDndCmd, 1, PermAdmin, "Usage !dnd <args> - Executes the play dnd command. Updates next schedules play date. Admins only.")
 	// Execute help command to display available
-	// Commands. Currently list all, even if
-	// unavailable to the user via roles etc.
-	cr.Register("help", helpCmd, 0, "Usage !help or !help <command>. - Displays all comamnds or command usage syntax.")
+	// commands the caller is allowed to use.
+	cr.Register("help", helpCmd, 0, PermEveryone, "Usage !help or !help <command>. - Displays all commands or command usage syntax.")
 	// Execute minecraft command
-	cr.Register("mc", mcCmd, 1, "Usage !mc <args>. Executes Minecraft commands via RCON. Admins or Minecraft admins only.")
+	cr.Register("mc", mcCmd, 1, PermMcAdmin, "Usage !mc <args>. Executes Minecraft commands via RCON. Admins or Minecraft admins only.")
 	// Restart Minecraft Server
-	cr.Register("mcr", manageMinecraftCmd, 0, "Usage !mrc <args>. Available: up, down, restart. Restarts the Minecraft server container. Admins or Minecraft admins.")
+	cr.Register("mcr", manageMinecraftCmd, 0, PermMcAdmin, "Usage !mcr <args>. Available: up, down, restart. Restarts the Minecraft server container. Admins or Minecraft admins.")
 	// Play Audio Command
-	cr.Register("play", playAudioCmd, 0, "Usage !play. Allowing streaming of Audio to bots voice channel. Admins only.")
+	cr.Register("play", playAudioCmd, 0, PermAdmin, "Usage !play. Allowing streaming of Audio to bots voice channel. Admins only.")
 	// List joinable roles
-	cr.Register("rlist", roleListCmd, 0, "Usage !rlist. Lists available joinable roles via rjoin or rleave.")
+	cr.Register("rlist", roleListCmd, 0, PermEveryone, "Usage !rlist. Lists available joinable roles via rjoin or rleave.")
 	// Join role from list
-	cr.Register("rjoin", roleJoinCmd, 1, "Usage !rjoin <role>. Joins a joinable role.")
+	cr.Register("rjoin", roleJoinCmd, 1, PermEveryone, "Usage !rjoin <role>. Joins a joinable role.")
 	// Leave role from list
-	cr.Register("rleave", roleLeaveCmd, 1, "Usage !rleave <role>. Leaves a joinable role.")
-	// Roll a die or dice
-	cr.Register("roll", rollCmd, 1, "Usage: !roll [dice] [adv/dis]. Example: !roll 3d6+3 or !roll d20 adv")
-	// Set timer
-	cr.Register("set", setTimerCmd, 1, "Usage !set <00h-00m>. Set a timer in which the bot will DM you when the timer is up.")
+	cr.Register("rleave", roleLeaveCmd, 1, PermEveryone, "Usage !rleave <role>. Leaves a joinable role.")
+	// Roll dice
+	cr.Register("roll", rollCmd, 1, PermEveryone, "Usage: !roll <dice> [adv/dis] or !roll stats. Examples: !roll 2d6+1d8+3, !roll d20 adv, !roll stats (4d6 drop lowest x6).")
+	// Set a timer
+	cr.Register("set", setTimerCmd, 1, PermAdmin, "Usage !set <duration> [@user]. Example: !set 1h30m. Sets a timer; the bot DMs the target when it's up. Survives restarts. Admins only.")
 	// See when dnd is
-	cr.Register("when", whenIsDndCmd, 0, "Usage !when. Displays next DND play date if available to this discord server.")
+	cr.Register("when", whenIsDndCmd, 0, PermEveryone, "Usage !when. Displays next DND play date if available to this discord server.")
 	// Whitelist Minecraft
-	cr.Register("whitelist", whitelistCmd, 1, "Usage !whitelist <mcUserName>. Whitelists a Minecraft user to the server. Admins or Minecraft admins.")
+	cr.Register("whitelist", whitelistCmd, 1, PermMcAdmin, "Usage !whitelist <mcUserName>. Whitelists a Minecraft user to the server. Admins or Minecraft admins.")
 	return cr
 }
 
-func (cr *CommandRegistry) ListCommands() []string {
+// ListCommandsFor returns the sorted names of commands the caller may use.
+func (cr *CommandRegistry) ListCommandsFor(ctx CommandCtx) []string {
 	keys := []string{}
-	for k := range cr.commands {
-		keys = append(keys, k)
+	for name, cmd := range cr.commands {
+		if cmd.perm.Allows(ctx) {
+			keys = append(keys, name)
+		}
 	}
+	slices.Sort(keys)
 	return keys
 }

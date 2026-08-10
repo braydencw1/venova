@@ -19,6 +19,7 @@ func OpenDatabase(dsn string) error {
 
 	err = db.AutoMigrate(
 		&User{},
+		&Timer{},
 	)
 	if err != nil {
 		return err
