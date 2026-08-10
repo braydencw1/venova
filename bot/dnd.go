@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/braydencw1/venova/db"
 )
@@ -103,15 +105,25 @@ func rollCmd(ctx CommandCtx) error {
 
 	roll, err := ParseRoll(ctx.Args)
 	if err != nil {
-		return ctx.Reply(err.Error())
+		return ctx.Reply(upperFirst(err.Error()))
 	}
 
 	return ctx.Reply(roll.Execute().FormatMessage())
 }
 
+// upperFirst capitalizes lint-friendly lowercase error strings for display as
+// Discord replies.
+func upperFirst(s string) string {
+	r, size := utf8.DecodeRuneInString(s)
+	if r == utf8.RuneError {
+		return s
+	}
+	return string(unicode.ToUpper(r)) + s[size:]
+}
+
 var (
 	diceTermPattern = regexp.MustCompile(`^(\d*)d(\d+)$`)
-	errInvalidRoll  = errors.New("Invalid format. Use dice like 2d6+1d8+3 or d20, optionally with adv/dis.")
+	errInvalidRoll  = errors.New("invalid format: use dice like 2d6+1d8+3 or d20, optionally with adv/dis")
 )
 
 // ParseRoll parses full !roll arguments: a dice expression, possibly split
@@ -133,7 +145,7 @@ func ParseRoll(args []string) (Roll, error) {
 	}
 
 	if advantage && disadvantage {
-		return Roll{}, errors.New("Pick either advantage or disadvantage, not both.")
+		return Roll{}, errors.New("pick either advantage or disadvantage, not both")
 	}
 
 	roll, err := ParseRollExpression(strings.Join(rollArgs, ""))
@@ -150,7 +162,7 @@ func ParseRoll(args []string) (Roll, error) {
 func ParseRollExpression(expr string) (Roll, error) {
 	expr = strings.ToLower(strings.ReplaceAll(expr, " ", ""))
 	if expr == "" {
-		return Roll{}, errors.New("Roll something, e.g. !roll 2d6+3 or !roll d20 adv.")
+		return Roll{}, errors.New("roll something, e.g. !roll 2d6+3 or !roll d20 adv")
 	}
 
 	// Normalize subtraction into "+-" so the expression splits into signed terms.
@@ -174,18 +186,18 @@ func ParseRollExpression(expr string) (Roll, error) {
 			if m[1] != "" {
 				n, err := strconv.Atoi(m[1])
 				if err != nil || n <= 0 || n > 100 {
-					return Roll{}, errors.New("Invalid number of dice (must be 1–100).")
+					return Roll{}, errors.New("invalid number of dice (must be 1–100)")
 				}
 				numDice = n
 			}
 			totalDice += numDice
 			if totalDice > 100 {
-				return Roll{}, errors.New("Too many dice (100 max across the whole roll).")
+				return Roll{}, errors.New("too many dice (100 max across the whole roll)")
 			}
 
 			dieSize, err := strconv.Atoi(m[2])
 			if err != nil || dieSize <= 0 || dieSize > 1000 {
-				return Roll{}, errors.New("Invalid die size (must be 1–1000).")
+				return Roll{}, errors.New("invalid die size (must be 1–1000)")
 			}
 
 			roll.Groups = append(roll.Groups, DiceGroup{NumDice: numDice, DieSize: dieSize})
@@ -193,7 +205,7 @@ func ParseRollExpression(expr string) (Roll, error) {
 		}
 
 		if after, ok := strings.CutPrefix(term, "-"); ok && diceTermPattern.MatchString(after) {
-			return Roll{}, errors.New("Cannot subtract dice.")
+			return Roll{}, errors.New("cannot subtract dice")
 		}
 
 		mod, err := strconv.Atoi(term)
